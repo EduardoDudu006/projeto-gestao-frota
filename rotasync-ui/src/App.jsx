@@ -67,22 +67,22 @@ function App() {
 
     // --- RENDERIZAÇÃO DA TELA (JSX) ---
     return (
-        <div>
+        <div className="main">
             {/* Cabeçalho da página */}
             <header className="header">
                 <h1>RotaSync Logística</h1>
-                <p>Painel de Gestão de Frota</p>
+                <p className="subtitulo">Painel de Gestão de Frota</p>
             </header>
 
             {/* Container principal que divide a tela em duas colunas usando CSS Grid */}
-            <main className="dashboard">
+            <main className="painel">
                 {/* COLUNA 1: FORMULÁRIO */}
                 <section className="card">
                     <h2>Novo Veículo</h2>
 
                     {/* O evento onSubmit liga o botão "submit" à função cadastrarVeiculo */}
                     <form onSubmit={cadastrarVeiculo}>
-                        <div className="form-group">
+                        <div className="form-grupo">
                             <label>Placa</label>
                             <input
                                 type="text"
@@ -92,7 +92,7 @@ function App() {
                                 required
                             />
                         </div>
-                        <div className="form-group">
+                        <div className="form-grupo">
                             <label>Modelo</label>
                             <input
                                 type="text"
@@ -102,7 +102,7 @@ function App() {
                                 required
                             />
                         </div>
-                        <div className="form-group">
+                        <div className="form-grupo">
                             <label>Quilometragem (km)</label>
                             <input
                                 type="number"
@@ -143,11 +143,11 @@ function App() {
                                     {/* Validação visual: Lê o booleano 'alerta_revisao' processado pela
                       regra de negócio no back-end. Se true, pinta de vermelho. Se false, verde. */}
                                     {v.alerta_revisao ? (
-                                        <span className="badge bg-danger">
+                                        <span className="status bg-danger">
                                             Fazer Revisão
                                         </span>
                                     ) : (
-                                        <span className="badge bg-success">
+                                        <span className="status bg-success">
                                             Em Dia
                                         </span>
                                     )}
@@ -157,9 +157,20 @@ function App() {
                     </div>
                 </section>
             </main>
+            <footer className="footer">
+                <p>
+                    ©2026 Todos os direitos reservados - Projeto desenvolvido na
+                    disciplina Back end e Frameworks 3NA.
+                </p>
+            </footer>
         </div>
     );
 }
 
 // Exporta o componente App para ser carregado pelo main.jsx
 export default App;
+
+
+
+
+
