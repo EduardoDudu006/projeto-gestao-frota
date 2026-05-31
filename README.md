@@ -1,96 +1,111 @@
-# projeto-gestao-frota
-## Projeto AV2 da Disciplina Back End e Frameworks
+***
 
-# 🚚 RotaSync Logística - API de Gestão de Frota
+# 🚚 RotaSync Logística - Sistema de Gestão de Frota
 
-**Projeto AV2 - Tech Challenge UNINASSAU**
-**Disciplina:** Back-end Frameworks (2026.1)
-**Professor:** Breno Holanda
-
----
-
-## 📌 Sobre o Projeto
-
-O **RotaSync Logística** é uma solução completa desenvolvida para solucionar problemas de gestão de frota empresarial. O projeto consiste em uma **API RESTful** estruturada no padrão MVC e uma interface web moderna. O objetivo principal é garantir autonomia e baixo custo no registro de veículos, controlando a quilometragem e emitindo alertas automatizados de revisão preventiva.
-
----
-
-## 🚀 Funcionalidades e Regras de Negócio
-
-* **Cadastro de Veículos (Create):** Permite o registro de novos veículos na frota informando placa, modelo e quilometragem atual.
-* **Listagem da Frota (Read):** Retorna todos os veículos cadastrados no banco de dados.
-* **Prevenção de Duplicidade:** O sistema possui uma trava de segurança estruturada com tratamento de erros (`try/except`) que impede o cadastro de veículos com a mesma placa.
-* **Alerta Inteligente de Manutenção:** Ao cadastrar ou atualizar um veículo com quilometragem igual ou superior a 10.000 km, o sistema altera automaticamente a flag de manutenção (`alerta_revisao = True`), sinalizando a necessidade de revisão imediata.
+### 🏅 Projeto Acadêmico — AV2 Tech Challenge
+* **Instituição:** UNINASSAU
+* **Curso:** Análise e Desenvolvimento de Sistemas
+* **Disciplina:** Desenvolvimento Back-end e Frameworks
+* **Professor:** Breno Holanda
+* **Aluno:** Eduardo Luz **Matrícula:** 01824297
+* **Período:** 3º
+* **Turno:** Noite
+* **Turma:** 3NA
+* **Ano/Semestre:** 2026.1
 
 ---
 
-## 🛠️ Tecnologias Utilizadas
+## 📌 Visão Geral do Projeto
 
-O projeto foi dividido em duas frentes para separar claramente as responsabilidades de processamento de dados e interface visual:
+O **RotaSync Logística** é uma aplicação Full-Stack desenvolvida para solucionar gargalos operacionais no gerenciamento de frotas de veículos empresariais. O sistema permite monitorar a quilometragem dos automóveis, aplicando regras de negócio automatizadas para sinalizar preventivamente a necessidade de revisões mecânicas, mitigando custos com manutenções corretivas e aumentando a segurança da operação logística.
 
-**Back-end (100% focado no Edital):**
-* **Python 3+**
-* **FastAPI:** Framework moderno e de alta performance para a construção da API.
-* **SQLAlchemy & Pydantic:** Ferramentas para mapeamento objeto-relacional (ORM) e validação estrita de dados (Camada Model e View do MVC).
-* **SQLite:** Banco de dados relacional leve (preparado para migração para PostgreSQL/MySQL no deploy).
-* **Uvicorn:** Servidor ASGI para rodar a aplicação.
-
-**Front-end (Apresentação Visual):**
-* **React + Vite:** Para uma interface rápida e reativa.
-* **Axios:** Para consumo da API e comunicação segura via requisições HTTP.
-* **CSS Grid & Flexbox:** Estilização moderna e responsiva.
+O ecossistema foi projetado seguindo a separação estrita de responsabilidades: um **Back-end RESTful** estruturado em Python sob a arquitetura padrão **MVC (Model-View-Controller)** e um **Front-end SPA (Single Page Application)** dinâmico e responsivo em **React**.
 
 ---
 
-## 📂 Arquitetura do Projeto (Padrão MVC)
+## 🗺️ Mapa de Pastas e Arquivos (Estrutura do Projeto)
 
-O back-end em FastAPI foi organizado adaptando o padrão MVC para garantir código limpo e manutenção facilitada:
+Abaixo está a árvore hierárquica do projeto, detalhando a função de cada diretório e arquivo na arquitetura:
 
-* `models.py` **(Model):** Representa a estrutura do Banco de Dados.
-* `schemas.py` **(View/Validação):** Filtra, valida e formata os dados que entram e saem da API.
-* `main.py` **(Controller/Service):** Contém as rotas, regras de negócio e comunicação principal.
-* `database.py` **(Repository):** Gerencia as sessões de conexão com o banco de dados.
+```text
+rotasync-logistica/
+│
+├── backend/                          # Diretório do Servidor e Banco de Dados (FastAPI)
+│   ├── database.py                   # Conexão com SQLite, configuração do ORM (Engine, SessionLocal) e get_db()
+│   ├── main.py                       # Arquivo Central (Controller): Rotas da API, regras de negócio e CORS
+│   ├── models.py                     # Camada Model: Definição da tabela relacional 'veiculos' (SQLAlchemy)
+│   ├── schemas.py                    # Camada View/Validação: Schemas do Pydantic para tipagem estrita de dados
+│   ├── frota.db                      # Banco de dados local relacional SQLite (gerado automaticamente)
+│   └── requirements.txt              # Mapeamento de dependências do Python para deploy na nuvem
+│
+└── frontend/                         # Diretório da Interface de Usuário (React + Vite)
+    ├── index.html                    # Arquivo HTML5 raiz do ecossistema front-end
+    ├── package.json                  # Manifesto de dependências do Node.js (React, Vite, Axios)
+    ├── vite.config.js                # Arquivo de configuração de compilação do Vite
+    └── src/                          # Código-fonte da aplicação React
+        ├── main.jsx                  # Ponto de entrada javascript: acopla a árvore ao DOM (limpo sem index.css)
+        ├── App.jsx                   # Componente Principal: Estados (useState), Efeitos (useEffect) e JSX da UI
+        ├── App.css                   # Estilização Global: CSS Grid, variáveis nativas, centralização e Media Queries
+        └── services/                 # Módulo de Integração com Serviços Externos
+            └── api.js                # Instância do Axios configurada com a baseURL dinâmica (Render/Local)
 
----
+### ⚙️ Funcionalidades e Regras de Negócio Implementadas
+**Cadastro de Veículos (Create - HTTP POST):** Recebe e persiste os dados brutos de entrada validando Placa, Modelo e Quilometragem.
 
-## ⚙️ Como Executar o Projeto Localmente
+**Prevenção de Duplicidade de Chaves:** Mecanismo lógico interceptador que valida se a placa informada já existe no banco. Caso exista, dispara um erro customizado 400 Bad Request encapsulado em um bloco try/except.
 
-Siga as instruções abaixo para rodar o projeto na sua máquina.
+**Alerta de Revisão Automatizado:** Regra de negócio executada na camada do controlador: se a quilometragem informada for igual ou superior a 10.000 km, o sistema atualiza a flag booleana alerta_revisao para True. Caso contrário, mantém False.
 
-### 1. Inicializando o Back-end (API)
+**Listagem em Tempo Real (Read - HTTP GET):** Recupera todos os registros do banco SQLite através de uma consulta unificada do ORM e popula o grid do front-end instantaneamente.
 
-Abra o terminal, navegue até a pasta raiz do back-end e instale as dependências:
+Responsividade Mobile Completa: Utilização de Media Queries CSS para reestruturar o layout de duas colunas (Grid) para uma única coluna vertical empilhada em displays menores que 768px.
 
-```bash
-# Instalação das bibliotecas necessárias
-pip install fastapi uvicorn sqlalchemy pydantic
+**Controle de Segurança CORS:** Configuração do middleware CORSMiddleware no FastAPI para habilitar requisições Cross-Origin seguras vindas da porta do React.
 
-# Execução do servidor local
+##🛠️ Tecnologias e Frameworks Utilizados
+Back-end: Python 3+, FastAPI, SQLAlchemy (ORM), Pydantic (Validação), Uvicorn (Servidor ASGI).
+
+**Banco de Dados:** SQLite (Em ambiente de desenvolvimento), expansível nativamente para PostgreSQL ou MySQL.
+
+**Front-end:** React, Vite (Build Tool), Axios (Cliente HTTP Assíncrono), CSS3 Nativo (Grid, Flexbox, Media Queries).
+
+**Versionamento & Infraestrutura:** Git, GitHub, Render (Hospedagem do Back-end), Vercel (Hospedagem do Front-end).
+
+##🚀 Como Executar o Ecossistema Localmente
+1. Inicializando a API Back-end
+Navegue até a pasta backend/ pelo terminal e execute os comandos:
+
+# Instalação automatizada das dependências mapeadas
+pip install -r requirements.txt
+
+# Inicialização do servidor Uvicorn com hot-reload ativo
 uvicorn main:app --reload
 
-**A API estará rodando em:** http://127.0.0.1:8000
+**O servidor iniciará localmente no endereço:** http://127.0.0.1:8000
 
-2. Acessando a Documentação Interativa (Swagger)
-A documentação interativa gerada automaticamente pelo FastAPI pode ser acessada no navegador pelo link:
-👉 http://127.0.0.1:8000/docs
+**Documentação OpenAPI interativa (Swagger) disponível em:** http://127.0.0.1:8000/docs
 
-Nesta tela, é possível testar todas as rotas (GET e POST) sem a necessidade de softwares de terceiros.
+##2. Inicializando a Interface Front-end
+Abra uma nova janela de terminal, navegue até a pasta frontend/ e execute os comandos:
 
-3. Inicializando o Front-end (React)
-Abra um **novo terminal**, navegue até a pasta do front-end (rotasync-ui) e execute:
-
-# Instalação dos pacotes do Node
+# Instalação dos pacotes e módulos do Node.js
 npm install
 
-# Execução da interface visual
+# Inicialização do servidor de desenvolvimento do Vite
 npm run dev
 
-A aplicação web estará rodando em: http://localhost:5173
+**A interface web estará acessível em:** http://localhost:5173
 
-### 🌐 Deploy na Nuvem
-A API está preparada para ser hospedada em plataformas como Render ou Railway.
+###🌐 Arquitetura de Produção (Deploy na Nuvem)
+O ecossistema encontra-se hospedado de forma pública e integrada na nuvem:
 
-O arquivo requirements.txt mapeia todas as dependências do ambiente.
+**API Back-end (Hospedagem no Render):** https://projeto-gestao-frota.onrender.com
 
-Comando de inicialização configurado para servidores em nuvem:
-uvicorn main:app --host 0.0.0.0 --port $PORT
+**Interface Front-end (Hospedagem na Vercel):** Acesse o link gerado em seu dashboard da Vercel.
+
+⚠️ Nota de Configuração: No ambiente de produção, o arquivo src/services/api.js foi devidamente atualizado para apontar a propriedade baseURL para a URL de produção do Render, garantindo a integridade operacional de ponta a ponta sem dependência de execução local.
+
+##📝 Licença e Direitos
+©2026 Todos os direitos reservados.
+
+Projeto desenvolvido como critério avaliativo para a disciplina de **Back end e Frameworks**, sob a orientação do **Professor Breno Holanda**. Livre para fins de estudo e portfólio acadêmico.
