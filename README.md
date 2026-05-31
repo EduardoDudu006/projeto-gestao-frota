@@ -21,6 +21,67 @@ O **RotaSync Logística** é uma aplicação Full-Stack desenvolvida para soluci
 
 O ecossistema foi projetado seguindo a separação estrita de responsabilidades: um **Back-end RESTful** estruturado em Python sob a arquitetura padrão **MVC (Model-View-Controller)** e um **Front-end SPA (Single Page Application)** dinâmico e responsivo em **React**.
 
+### ⚙️ Funcionalidades e Regras de Negócio Implementadas
+**Cadastro de Veículos (Create - HTTP POST):** Recebe e persiste os dados brutos de entrada validando Placa, Modelo e Quilometragem.
+
+**Prevenção de Duplicidade de Chaves:** Mecanismo lógico interceptador que valida se a placa informada já existe no banco. Caso exista, dispara um erro customizado 400 Bad Request encapsulado em um bloco try/except.
+
+**Alerta de Revisão Automatizado:** Regra de negócio executada na camada do controlador: se a quilometragem informada for igual ou superior a 10.000 km, o sistema atualiza a flag booleana alerta_revisao para True. Caso contrário, mantém False.
+
+**Listagem em Tempo Real (Read - HTTP GET):** Recupera todos os registros do banco SQLite através de uma consulta unificada do ORM e popula o grid do front-end instantaneamente.
+
+**Responsividade Mobile Completa:** Utilização de Media Queries CSS para reestruturar o layout de duas colunas (Grid) para uma única coluna vertical empilhada em displays menores que 768px.
+
+**Controle de Segurança CORS:** Configuração do middleware CORSMiddleware no FastAPI para habilitar requisições Cross-Origin seguras vindas da porta do React.
+
+## 🛠️ Tecnologias e Frameworks Utilizados
+Back-end: Python 3+, FastAPI, SQLAlchemy (ORM), Pydantic (Validação), Uvicorn (Servidor ASGI).
+
+**Banco de Dados:** SQLite (Em ambiente de desenvolvimento), expansível nativamente para PostgreSQL ou MySQL.
+
+**Front-end:** React, Vite (Build Tool), Axios (Cliente HTTP Assíncrono), CSS3 Nativo (Grid, Flexbox, Media Queries).
+
+**Versionamento & Infraestrutura:** Git, GitHub, Render (Hospedagem do Back-end), Vercel (Hospedagem do Front-end).
+
+## 🚀 Como Executar o Ecossistema Localmente
+1. Inicializando a API Back-end
+Navegue até a pasta backend/ pelo terminal e execute os comandos:
+
+# Instalação automatizada das dependências mapeadas
+pip install -r requirements.txt
+
+# Inicialização do servidor Uvicorn com hot-reload ativo
+uvicorn main:app --reload
+
+**O servidor iniciará localmente no endereço:** http://127.0.0.1:8000
+
+**Documentação OpenAPI interativa (Swagger) disponível em:** http://127.0.0.1:8000/docs
+
+# 2. Inicializando a Interface Front-end
+Abra uma nova janela de terminal, navegue até a pasta frontend/ e execute os comandos:
+
+# Instalação dos pacotes e módulos do Node.js
+npm install
+
+# Inicialização do servidor de desenvolvimento do Vite
+npm run dev
+
+**A interface web estará acessível em:** http://localhost:5173
+
+### 🌐 Arquitetura de Produção (Deploy na Nuvem)
+O ecossistema encontra-se hospedado de forma pública e integrada na nuvem:
+
+**API Back-end (Hospedagem no Render):** https://projeto-gestao-frota.onrender.com
+
+**Interface Front-end (Hospedagem na Vercel):** Acesse o link gerado em seu dashboard da Vercel.
+
+**⚠️ Nota de Configuração:** No ambiente de produção, o arquivo src/services/api.js foi devidamente atualizado para apontar a propriedade baseURL para a URL de produção do Render, garantindo a integridade operacional de ponta a ponta sem dependência de execução local.
+
+## 📝 Licença e Direitos
+©2026 Todos os direitos reservados.
+
+Projeto desenvolvido como critério avaliativo para a disciplina de **Back end e Frameworks**, sob a orientação do **Professor Breno Holanda**. Livre para fins de estudo e portfólio acadêmico.
+
 ---
 
 ## 🗺️ Mapa de Pastas e Arquivos (Estrutura do Projeto)
@@ -48,64 +109,3 @@ rotasync-logistica/
         ├── App.css                   # Estilização Global: CSS Grid, variáveis nativas, centralização e Media Queries
         └── services/                 # Módulo de Integração com Serviços Externos
             └── api.js                # Instância do Axios configurada com a baseURL dinâmica (Render/Local)
-
-### ⚙️ Funcionalidades e Regras de Negócio Implementadas
-**Cadastro de Veículos (Create - HTTP POST):** Recebe e persiste os dados brutos de entrada validando Placa, Modelo e Quilometragem.
-
-**Prevenção de Duplicidade de Chaves:** Mecanismo lógico interceptador que valida se a placa informada já existe no banco. Caso exista, dispara um erro customizado 400 Bad Request encapsulado em um bloco try/except.
-
-**Alerta de Revisão Automatizado:** Regra de negócio executada na camada do controlador: se a quilometragem informada for igual ou superior a 10.000 km, o sistema atualiza a flag booleana alerta_revisao para True. Caso contrário, mantém False.
-
-**Listagem em Tempo Real (Read - HTTP GET):** Recupera todos os registros do banco SQLite através de uma consulta unificada do ORM e popula o grid do front-end instantaneamente.
-
-Responsividade Mobile Completa: Utilização de Media Queries CSS para reestruturar o layout de duas colunas (Grid) para uma única coluna vertical empilhada em displays menores que 768px.
-
-**Controle de Segurança CORS:** Configuração do middleware CORSMiddleware no FastAPI para habilitar requisições Cross-Origin seguras vindas da porta do React.
-
-##🛠️ Tecnologias e Frameworks Utilizados
-Back-end: Python 3+, FastAPI, SQLAlchemy (ORM), Pydantic (Validação), Uvicorn (Servidor ASGI).
-
-**Banco de Dados:** SQLite (Em ambiente de desenvolvimento), expansível nativamente para PostgreSQL ou MySQL.
-
-**Front-end:** React, Vite (Build Tool), Axios (Cliente HTTP Assíncrono), CSS3 Nativo (Grid, Flexbox, Media Queries).
-
-**Versionamento & Infraestrutura:** Git, GitHub, Render (Hospedagem do Back-end), Vercel (Hospedagem do Front-end).
-
-##🚀 Como Executar o Ecossistema Localmente
-1. Inicializando a API Back-end
-Navegue até a pasta backend/ pelo terminal e execute os comandos:
-
-# Instalação automatizada das dependências mapeadas
-pip install -r requirements.txt
-
-# Inicialização do servidor Uvicorn com hot-reload ativo
-uvicorn main:app --reload
-
-**O servidor iniciará localmente no endereço:** http://127.0.0.1:8000
-
-**Documentação OpenAPI interativa (Swagger) disponível em:** http://127.0.0.1:8000/docs
-
-##2. Inicializando a Interface Front-end
-Abra uma nova janela de terminal, navegue até a pasta frontend/ e execute os comandos:
-
-# Instalação dos pacotes e módulos do Node.js
-npm install
-
-# Inicialização do servidor de desenvolvimento do Vite
-npm run dev
-
-**A interface web estará acessível em:** http://localhost:5173
-
-###🌐 Arquitetura de Produção (Deploy na Nuvem)
-O ecossistema encontra-se hospedado de forma pública e integrada na nuvem:
-
-**API Back-end (Hospedagem no Render):** https://projeto-gestao-frota.onrender.com
-
-**Interface Front-end (Hospedagem na Vercel):** Acesse o link gerado em seu dashboard da Vercel.
-
-⚠️ Nota de Configuração: No ambiente de produção, o arquivo src/services/api.js foi devidamente atualizado para apontar a propriedade baseURL para a URL de produção do Render, garantindo a integridade operacional de ponta a ponta sem dependência de execução local.
-
-##📝 Licença e Direitos
-©2026 Todos os direitos reservados.
-
-Projeto desenvolvido como critério avaliativo para a disciplina de **Back end e Frameworks**, sob a orientação do **Professor Breno Holanda**. Livre para fins de estudo e portfólio acadêmico.
