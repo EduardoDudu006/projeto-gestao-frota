@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-    baseURL: "http://127.0.0.1:8000/api", // URL do FastAPI local
+    baseURL: "https://projeto-gestao-frota.onrender.com/api", // URL do FastAPI local
 });
 
 export default api;
