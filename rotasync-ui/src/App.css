@@ -16,31 +16,31 @@ body {
 }
 
 .header {
-  background-color: var(--primary);
-  color: white;
-  padding: 10px 5px; /* Um pequeno ajuste para não esmagar o conteúdo nas bordas superior/inferior */
-  text-align: center;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border-radius: 0px 0px 12px 12px;
+    background-color: var(--primary);
+    color: white;
+    padding: 10px 5px; /* Um pequeno ajuste para não esmagar o conteúdo nas bordas superior/inferior */
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 0px 0px 12px 12px;
 }
 
 h1 {
-  font-family: var(--heading);
-  font-weight: 700;
-  color: var(--text-h);
-  font-size: 3em;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.322);
+    font-family: var(--heading);
+    font-weight: 700;
+    color: var(--text-h);
+    font-size: 3em;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.322);
 
-  /* CORREÇÃO AQUI: Remove a margem padrão do navegador */
-  margin: 0;
+    /* CORREÇÃO AQUI: Remove a margem padrão do navegador */
+    margin: 0;
 }
 
 .subtitulo {
-  font-family: var(--heading);
-  font-size: 1.2em;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.322);
-  margin-top: 4px;    /* Distância bem curta do título de cima */
-  margin-bottom: 5px; /* Distância da borda inferior do header */
+    font-family: var(--heading);
+    font-size: 1.2em;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.322);
+    margin-top: 4px; /* Distância bem curta do título de cima */
+    margin-bottom: 5px; /* Distância da borda inferior do header */
 }
 
 /* Usando CSS Grid para dividir a tela em duas colunas */
@@ -136,5 +136,41 @@ h2 {
 }
 
 footer {
-  text-align: center;
+    text-align: center;
 }
+
+/* --- RESPONSIVIDADE (TELAS MENORES) --- */
+
+/* Quando a tela tiver 768px de largura ou menos (tamanho padrão de celulares e tablets em pé) */
+@media (max-width: 768px) {
+    .painel {
+        /* Muda o CSS Grid de duas colunas (1fr 2fr) para apenas uma única coluna */
+        grid-template-columns: 1fr;
+
+        /* Em telas pequenas, 80% pode ficar muito espremido.
+       Aumentamos para 95% para aproveitar melhor as laterais do celular */
+        width: 95%;
+        margin: 20px auto; /* Reduz o espaço abaixo do header para não empurrar muito o conteúdo */
+    }
+
+    /* Ajuste opcional para diminuir um pouco o título do cabeçalho no celular */
+    h1 {
+        font-size: 2.2em;
+    }
+
+    .subtitulo {
+        font-size: 1em;
+    }
+
+    /* Faz os itens da frota se organizarem melhor em telas muito estreitas */
+    .veiculo-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .status {
+        align-self: flex-start; /* Alinha o selo "Em dia/Revisão" à esquerda no celular */
+    }
+}
+
