@@ -1,195 +1,123 @@
-:root {
-    --bg-color: #f4f7f6;
-    --primary: #2563eb;
-    --card-bg: #ffffff;
-    --text-main: #1f2937;
-    --danger: #ef4444;
-    --success: #10b981;
-    --heading: system-ui, "Segoe UI", Roboto, sans-serif;
-}
+/* Adicione estas classes ao final do seu arquivo App.css atual */
 
-body {
-    margin: 0;
-    font-family: "Inter", system-ui, sans-serif;
-    background-color: var(--bg-color);
-    color: var(--text-main);
-}
-
-.header {
-    background-color: var(--primary);
-    color: white;
-    padding: 10px 5px; /* Um pequeno ajuste para não esmagar o conteúdo nas bordas superior/inferior */
-    text-align: center;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    border-radius: 0px 0px 12px 12px;
-}
-
-h1 {
-    font-family: var(--heading);
-    font-weight: 700;
-    color: var(--text-h);
-    font-size: 3em;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.322);
-
-    /* CORREÇÃO AQUI: Remove a margem padrão do navegador */
-    margin: 0;
-}
-
-.subtitulo {
-    font-family: var(--heading);
-    font-size: 1.2em;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.322);
-    margin-top: 4px; /* Distância bem curta do título de cima */
-    margin-bottom: 5px; /* Distância da borda inferior do header */
-}
-
-/* Usando CSS Grid para dividir a tela em duas colunas */
-.painel {
-    width: 75%;
-    display: grid;
-    grid-template-columns: 1fr 2fr;
-    gap: 20px;
-    max-width: 1200px;
-    margin: 40px auto;
-    padding: 0 20px;
-    z-index: 1;
-}
-
-h2 {
-    color: #2563eb;
-    font-weight: bold;
-    text-shadow: 1px 1px 4px rgba(128, 128, 128, 0.308);
-    text-align: center;
-}
-
-.card {
-    background: var(--card-bg);
-    padding: 24px;
-    border: 1px solid var(--primary);
-    border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-}
-
-/* Usando Flexbox para o formulário */
-.form-grupo {
+/* Camada de Fundo Escurecida e Centralizadora */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.55);
     display: flex;
-    flex-direction: column;
-    margin-bottom: 16px;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    backdrop-filter: blur(2px);
+    animation: fadeInOverlay 0.2s ease-out;
 }
 
-.form-grupo label {
-    font-weight: 600;
-    margin-bottom: 8px;
+/* Card do Modal Centralizado seguindo o padrão visual do painel */
+.modal-card {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 440px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    text-align: center;
+    animation: slideInCard 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.1);
 }
 
-.form-grupo input {
-    padding: 10px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 16px;
+.modal-card h3 {
+    margin-top: 0;
+    margin-bottom: 12px;
+    color: #1a1a1a;
+    font-size: 20px;
 }
 
-.btn-submit {
-    background-color: var(--primary);
+.modal-card p {
+    color: #555555;
+    font-size: 15px;
+    line-height: 1.5;
+    margin-bottom: 20px;
+}
+
+/* Alinhamento dos botões dos Modals */
+.modal-botoes {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 25px;
+}
+
+/* Botões do Modal Customizado */
+.btn-modal-confirm {
+    background-color: #007bff;
     color: white;
     border: none;
-    padding: 12px;
-    border-radius: 6px;
-    cursor: pointer;
+    padding: 10px 18px;
+    border-radius: 4px;
     font-weight: bold;
-    width: 100%;
-    margin-top: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s;
 }
 
-.btn-submit:hover {
-    background-color: #1d4ed8;
+.btn-modal-confirm:hover {
+    background-color: #0056b3;
 }
 
-.veiculo-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+.btn-modal-cancel {
+    background-color: #e0e0e0;
+    color: #333333;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s;
 }
 
-/* Flexbox para alinhar os itens da lista do veículo na horizontal */
-.veiculo-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
+.btn-modal-cancel:hover {
+    background-color: #cccccc;
 }
 
-.status {
-    padding: 6px 12px;
-    border-radius: 20px;
+/* Botão Concluir Manutenção */
+.btn-revisao-feita {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 7px 14px;
+    border-radius: 4px;
     font-size: 12px;
     font-weight: bold;
-    color: white;
+    cursor: pointer;
+    transition: background 0.2s;
 }
 
-.bg-danger {
-    background-color: var(--danger);
-}
-.bg-success {
-    background-color: var(--success);
+.btn-revisao-feita:hover {
+    background-color: #1e7e34;
 }
 
-.btn-atualizar-km {
-  background-color: transparent;
-  color: var(--primary); /* Usa a cor azul padrão do seu sistema */
-  border: 1px solid var(--primary);
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 0.85em;
-  cursor: pointer;
-  margin-top: 10px;
-  transition: all 0.2s ease;
-  font-weight: 600;
-}
-
-.btn-atualizar-km:hover {
-  background-color: var(--primary);
-  color: white;
-}
-
-footer {
-    text-align: center;
-}
-
-/* --- RESPONSIVIDADE (TELAS MENORES) --- */
-
-/* Quando a tela tiver 768px de largura ou menos (tamanho padrão de celulares e tablets em pé) */
-@media (max-width: 768px) {
-    .painel {
-        /* Muda o CSS Grid de duas colunas (1fr 2fr) para apenas uma única coluna */
-        grid-template-columns: 1fr;
-
-        /* Em telas pequenas, 80% pode ficar muito espremido.
-       Aumentamos para 95% para aproveitar melhor as laterais do celular */
-        width: 95%;
-        margin: 20px auto; /* Reduz o espaço abaixo do header para não empurrar muito o conteúdo */
+/* Animações de entrada fluida */
+@keyframes fadeInOverlay {
+    from {
+        opacity: 0;
     }
-
-    /* Ajuste opcional para diminuir um pouco o título do cabeçalho no celular */
-    h1 {
-        font-size: 2.2em;
+    to {
+        opacity: 1;
     }
+}
 
-    .subtitulo {
-        font-size: 1em;
+@keyframes slideInCard {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
     }
-
-    /* Faz os itens da frota se organizarem melhor em telas muito estreitas */
-    .veiculo-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-    }
-
-    .status {
-        align-self: flex-start; /* Alinha o selo "Em dia/Revisão" à esquerda no celular */
+    to {
+        transform: translateY(0);
+        opacity: 1;
     }
 }
 

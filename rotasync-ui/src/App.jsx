@@ -3,23 +3,71 @@ import api from "./services/api";
 import "./App.css";
 
 function App() {
-    // --- ESTADOS ---
+    // --- ESTADOS DOS DADOS ---
     const [veiculos, setVeiculos] = useState([]);
     const [placa, setPlaca] = useState("");
     const [modelo, setModelo] = useState("");
     const [quilometragem, setQuilometragem] = useState("");
 
-    // Carrega a listagem assim que a tela abre
+    // --- ESTADOS DOS MODALS CUSTOMIZADOS (CARDS) ---
+    const [modal, setModal] = useState({
+        show: false,
+        type: "alert", // "alert" ou "confirm"
+        title: "",
+        message: "",
+        onConfirm: null,
+    });
+
+    const [kmModal, setKmModal] = useState({
+        show: false,
+        veiculoId: null,
+        modelo: "",
+        kmAtual: 0,
+        novaKm: "",
+    });
+
     useEffect(() => {
         carregarVeiculos();
     }, []);
 
-    // --- FUNÇÕES DE COMUNICAÇÃO COM A API ---
+    // --- GERENCIADORES DOS MODALS VISUAIS ---
+    const abrirAlerta = (title, message) => {
+        setModal({
+            show: true,
+            type: "alert",
+            title,
+            message,
+            onConfirm: null,
+        });
+    };
 
-    // GET - Busca lista de veículos
+    const abrirConfirmacao = (title, message, acaoConfirmar) => {
+        setModal({
+            show: true,
+            type: "confirm",
+            title,
+            message,
+            onConfirm: () => {
+                acaoConfirmar();
+                fecharModal();
+            },
+        });
+    };
+
+    const fecharModal = () => {
+        setModal({
+            show: false,
+            type: "alert",
+            title: "",
+            message: "",
+            onConfirm: null,
+        });
+    };
+
+    // --- FUNÇÕES DE REQUISIÇÃO (API) ---
+
     const carregarVeiculos = async () => {
         try {
-            // Busca os dados na rota mapeada http://localhost:8000/api/veiculos
             const response = await api.get("/veiculos/");
             setVeiculos(response.data);
         } catch (error) {
@@ -27,7 +75,6 @@ function App() {
         }
     };
 
-    // POST - Envia formulário de cadastro
     const cadastrarVeiculo = async (e) => {
         e.preventDefault();
         try {
@@ -40,84 +87,78 @@ function App() {
             setModelo("");
             setQuilometragem("");
             carregarVeiculos();
-            alert("Veículo cadastrado com sucesso!");
+            abrirAlerta(
+                "Sucesso 🎉",
+                "Veículo registrado com sucesso na frota!",
+            );
         } catch (error) {
-            alert(error.response?.data?.detail || "Erro ao cadastrar");
+            abrirAlerta(
+                "Erro ❌",
+                error.response?.data?.detail || "Erro ao realizar o cadastro.",
+            );
         }
     };
 
-    // PUT - Atualiza a quilometragem atual via prompt na tela
-    const handleAtualizarKm = async (id, kmAtual) => {
-        if (id === undefined || id === null) {
-            alert("Erro: ID inválido.");
-            return;
-        }
+    const dispararModalKm = (id, modeloVeiculo, kmAtual) => {
+        setKmModal({
+            show: true,
+            veiculoId: id,
+            modelo: modeloVeiculo,
+            kmAtual: kmAtual,
+            novaKm: kmAtual.toString(),
+        });
+    };
 
-        const novaKm = prompt(`Digite a nova quilometragem do veículo (Atual: ${kmAtual} km):`, kmAtual);
-        if (novaKm === null || novaKm === "") return;
-
-        const kmFormatada = parseInt(novaKm);
+    const salvarNovaQuilometragem = async () => {
+        const kmFormatada = parseInt(kmModal.novaKm);
         if (isNaN(kmFormatada) || kmFormatada < 0) {
-            alert("Insira um número válido.");
+            abrirAlerta(
+                "Aviso ⚠️",
+                "Insira um número de quilometragem válido.",
+            );
             return;
         }
 
         try {
-            // Envia para a API atualizar no banco de dados SQLite
-            await api.put(`/veiculos/${id}/quilometragem`, {
+            await api.put(`/veiculos/${kmModal.veiculoId}/quilometragem`, {
                 quilometragem: kmFormatada,
             });
-
-            // Atualiza o estado em memória no React para refletir instantaneamente as alterações
-            setVeiculos(
-                veiculos.map((v) =>
-                    v.id === id
-                        ? {
-                              ...v,
-                              quilometragem: kmFormatada,
-                              // Atualiza o alerta comparando se a quilometragem atingiu a meta dinâmica do veículo
-                              alerta_revisao: kmFormatada >= v.proxima_revisao_km,
-                          }
-                        : v,
-                ),
+            setKmModal({
+                show: false,
+                veiculoId: null,
+                modelo: "",
+                kmAtual: 0,
+                novaKm: "",
+            });
+            carregarVeiculos(); // Recarrega direto do banco garantindo sincronia
+            abrirAlerta(
+                "Atualizado 🔄",
+                "Quilometragem do veículo atualizada!",
             );
-            alert("Quilometragem atualizada!");
         } catch (error) {
-            alert(error.response?.data?.detail || "Erro ao atualizar quilometragem.");
+            abrirAlerta(
+                "Erro ❌",
+                error.response?.data?.detail || "Erro ao atualizar dados.",
+            );
         }
     };
 
-    // PUT - Aciona o registro de conclusão da revisão preventiva
-    const handleRegistrarRevisao = async (id) => {
-        if (id === undefined || id === null) return;
-
-        if (!window.confirm("Confirmar que a revisão foi realizada? Isso estenderá a meta de revisão por mais 10.000 km.")) {
-            return;
-        }
-
+    const executarRegistroRevisao = async (id) => {
         try {
-            // Dispara a rota PUT de controle de manutenção
             await api.put(`/veiculos/${id}/registrar-revisao`);
-
-            // Sincroniza a tela do React adicionando +10.000 à meta atual, preservando o odômetro intacto
-            setVeiculos(
-                veiculos.map((v) =>
-                    v.id === id
-                        ? {
-                              ...v,
-                              proxima_revisao_km: v.quilometragem + 10000,
-                              alerta_revisao: false
-                          }
-                        : v,
-                ),
+            carregarVeiculos(); // Recarga sincronizada com o SQLite
+            abrirAlerta(
+                "Sucesso 🔧",
+                "Revisão efetuada! Meta estendida por mais 10.000 km.",
             );
-            alert("Revisão registrada! Veículo liberado para rodar.");
         } catch (error) {
-            alert(error.response?.data?.detail || "Erro ao registrar revisão.");
+            abrirAlerta(
+                "Erro ❌",
+                error.response?.data?.detail || "Erro ao registrar revisão.",
+            );
         }
     };
 
-    // --- RENDERIZAÇÃO DE TELA ---
     return (
         <div className="main">
             <header className="header">
@@ -126,7 +167,7 @@ function App() {
             </header>
 
             <main className="painel">
-                {/* FORMULÁRIO DE CADASTRO */}
+                {/* CADASTRO */}
                 <section className="card">
                     <h2>Novo Veículo</h2>
                     <form onSubmit={cadastrarVeiculo}>
@@ -144,7 +185,7 @@ function App() {
                             <label>Modelo</label>
                             <input
                                 type="text"
-                                placeholder="Ex: Mercedes Sprinter"
+                                placeholder="Ex: Hyundai HR"
                                 value={modelo}
                                 onChange={(e) => setModelo(e.target.value)}
                                 required
@@ -156,7 +197,9 @@ function App() {
                                 type="number"
                                 placeholder="0"
                                 value={quilometragem}
-                                onChange={(e) => setQuilometragem(e.target.value)}
+                                onChange={(e) =>
+                                    setQuilometragem(e.target.value)
+                                }
                                 required
                             />
                         </div>
@@ -166,7 +209,7 @@ function App() {
                     </form>
                 </section>
 
-                {/* LISTAGEM DE VEÍCULOS */}
+                {/* LISTAGEM */}
                 <section className="card">
                     <h2>Frota Ativa</h2>
                     <div className="veiculo-list">
@@ -177,33 +220,71 @@ function App() {
                                 <div className="veiculo-item" key={v.id}>
                                     <div className="veiculo-info">
                                         <strong>{v.modelo}</strong> ({v.placa})
-
-                                        <small style={{ display: "block", margin: "5px 0", color: "#666" }}>
-                                            Km atual: <strong>{v.quilometragem} km</strong>
+                                        <small
+                                            style={{
+                                                display: "block",
+                                                margin: "5px 0",
+                                                color: "#666",
+                                            }}
+                                        >
+                                            Km atual:{" "}
+                                            <strong>
+                                                {v.quilometragem} km
+                                            </strong>
                                         </small>
-
-                                        {/* INFORMAÇÃO COMPLEMENTAR DA META DINÂMICA */}
-                                        <small style={{ display: "block", margin: "5px 0", color: "#007bff" }}>
-                                            Próxima revisão em: <strong>{v.proxima_revisao_km} km</strong>
+                                        <small
+                                            style={{
+                                                display: "block",
+                                                margin: "5px 0",
+                                                color: "#007bff",
+                                            }}
+                                        >
+                                            Próxima revisão em:{" "}
+                                            <strong>
+                                                {v.proxima_revisao_km ??
+                                                    v.quilometragem +
+                                                        10000}{" "}
+                                                km
+                                            </strong>
                                         </small>
-
                                         <button
                                             className="btn-atualizar-km"
-                                            onClick={() => handleAtualizarKm(v.id, v.quilometragem)}
+                                            onClick={() =>
+                                                dispararModalKm(
+                                                    v.id,
+                                                    v.modelo,
+                                                    v.quilometragem,
+                                                )
+                                            }
                                         >
                                             🔄 Atualizar KM
                                         </button>
                                     </div>
 
-                                    {/* EXIBIÇÃO DO BOTÃO SEGUNDO REGRA DE ALERTA ATIVA */}
                                     {v.alerta_revisao ? (
-                                        <div style={{ display: "flex", flexDirection: "column", gap: "8px", alignItems: "flex-end" }}>
+                                        <div
+                                            style={{
+                                                display: "flex",
+                                                flexDirection: "column",
+                                                gap: "8px",
+                                                alignItems: "flex-end",
+                                            }}
+                                        >
                                             <span className="status bg-danger">
                                                 Fazer Revisão
                                             </span>
                                             <button
                                                 className="btn-revisao-feita"
-                                                onClick={() => handleRegistrarRevisao(v.id)}
+                                                onClick={() =>
+                                                    abrirConfirmacao(
+                                                        "Confirmar Revisão 🔧",
+                                                        `Deseja confirmar que a revisão do veículo ${v.modelo} foi feita? Isso acrescentará 10.000 km na próxima meta de manutenção.`,
+                                                        () =>
+                                                            executarRegistroRevisao(
+                                                                v.id,
+                                                            ),
+                                                    )
+                                                }
                                             >
                                                 🔧 Revisão Realizada
                                             </button>
@@ -220,8 +301,108 @@ function App() {
                 </section>
             </main>
 
-            <footer className="footer">
-                <p>©2026 Todos os direitos reservados - Projeto desenvolvido na disciplina Back end e Frameworks 3NA.</p>
+            {/* --- CARDS DE MODAL CENTRALIZADOS NO PADRÃO DA PÁGINA --- */}
+
+            {/* 1. Modal de Notificação Geral (Alertas / Confirmações) */}
+            {modal.show && (
+                <div className="modal-overlay">
+                    <div className="modal-card">
+                        <h3>{modal.title}</h3>
+                        <p>{modal.message}</p>
+                        <div className="modal-botoes">
+                            {modal.type === "confirm" ? (
+                                <>
+                                    <button
+                                        className="btn-modal-cancel"
+                                        onClick={fecharModal}
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        className="btn-modal-confirm"
+                                        onClick={modal.onConfirm}
+                                    >
+                                        Confirmar
+                                    </button>
+                                </>
+                            ) : (
+                                <button
+                                    className="btn-modal-confirm"
+                                    onClick={fecharModal}
+                                >
+                                    Fechar
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* 2. Modal de Input para Atualização de Quilometragem */}
+            {kmModal.show && (
+                <div className="modal-overlay">
+                    <div className="modal-card">
+                        <h3>Atualizar Odômetro</h3>
+                        <p style={{ fontSize: "14px", color: "#555" }}>
+                            Veículo: <strong>{kmModal.modelo}</strong>
+                        </p>
+
+                        <div
+                            className="form-grupo"
+                            style={{ textAlign: "left", marginTop: "15px" }}
+                        >
+                            <label>Nova Quilometragem Atual (km)</label>
+                            <input
+                                type="number"
+                                value={kmModal.novaKm}
+                                onChange={(e) =>
+                                    setKmModal({
+                                        ...kmModal,
+                                        novaKm: e.target.value,
+                                    })
+                                }
+                                required
+                            />
+                        </div>
+
+                        <div className="modal-botoes">
+                            <button
+                                className="btn-modal-cancel"
+                                onClick={() =>
+                                    setKmModal({
+                                        show: false,
+                                        veiculoId: null,
+                                        modelo: "",
+                                        kmAtual: 0,
+                                        novaKm: "",
+                                    })
+                                }
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                className="btn-modal-confirm"
+                                onClick={salvarNovaQuilometragem}
+                            >
+                                Salvar Alteração
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <footer
+                className="header"
+                style={{
+                    marginTop: "40px",
+                    padding: "15px",
+                    borderRadius: "8px 8px 0 0",
+                }}
+            >
+                <p style={{ margin: 0, fontSize: "13px" }}>
+                    ©2026 RotaSync - Disciplina de Back end e Frameworks 3NA -
+                    UNINASSAU.
+                </p>
             </footer>
         </div>
     );
