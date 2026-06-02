@@ -134,7 +134,7 @@ function App() {
             // 1. Marca que o veículo foi atualizado (ignora a trava restritiva de veículo novo)
             setIgnorarTravaNovo(prev => [...prev, kmModal.veiculoId]);
 
-            // 2. Remove do histórico de revisados para que o alerta real do banco volte a funcionar se ele atingir a nova meta
+            // 2. Remove do histórico de revisados para que o alerta real do banco volte a funcionar
             setHistoricoRevisados(prev => prev.filter(id => id !== kmModal.veiculoId));
 
             setKmModal({
@@ -175,6 +175,35 @@ function App() {
                 error.response?.data?.detail || "Erro ao registrar revisão."
             );
         }
+    };
+
+    const apagarTodosVeiculos = async () => {
+        try {
+            await api.delete("/veiculos/");
+
+            // Reseta todos os estados locais do front-end
+            setVeiculos([]);
+            setHistoricoRevisados([]);
+            setIgnorarTravaNovo([]);
+
+            abrirAlerta(
+                "Frota Zerada 🗑️",
+                "Todos os veículos foram removidos com sucesso!"
+            );
+        } catch (error) {
+            abrirAlerta(
+                "Erro ❌",
+                error.response?.data?.detail || "Erro ao tentar apagar a frota."
+            );
+        }
+    };
+
+    const dispararConfirmacaoApagarTudo = () => {
+        abrirConfirmacao(
+            "Atenção Crítica ⚠️",
+            "Você tem certeza que deseja apagar TODOS os veículos cadastrados? Esta ação é irreversível.",
+            apagarTodosVeiculos
+        );
     };
 
     return (
@@ -227,7 +256,27 @@ function App() {
 
                 {/* LISTAGEM */}
                 <section className="card">
-                    <h2>Frota Ativa</h2>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px" }}>
+                        <h2>Frota Ativa</h2>
+                        {veiculos.length > 0 && (
+                            <button
+                                onClick={dispararConfirmacaoApagarTudo}
+                                style={{
+                                    backgroundColor: "#dc3545",
+                                    color: "white",
+                                    border: "none",
+                                    padding: "8px 12px",
+                                    borderRadius: "4px",
+                                    cursor: "pointer",
+                                    fontSize: "13px",
+                                    fontWeight: "bold"
+                                }}
+                            >
+                                🗑️ Limpar Frota
+                            </button>
+                        )}
+                    </div>
+
                     <div className="veiculo-list">
                         {veiculos.length === 0 ? (
                             <p>Nenhum veículo registrado.</p>
@@ -236,9 +285,7 @@ function App() {
                                 const foiRevisado = historicoRevisados.includes(v.id);
                                 const mudouKm = ignorarTravaNovo.includes(v.id);
 
-                                // LÓGICA DE STATUS BLINDADA:
-                                // O veículo precisa de revisão se o back-end mandar o alerta (v.alerta_revisao)
-                                // OU se for um veículo novo na lista (não revisado e não modificado ainda) com mais de 10.000 km iniciais.
+                                // LÓGICA DE STATUS:
                                 const precisaRevisao =
                                     v.alerta_revisao ||
                                     (!foiRevisado && !mudouKm && v.proxima_revisao_km === v.quilometragem + 10000 && v.quilometragem >= 10000);
@@ -247,56 +294,23 @@ function App() {
                                     <div className="veiculo-item" key={v.id}>
                                         <div className="veiculo-info">
                                             <strong>{v.modelo}</strong> ({v.placa})
-                                            <small
-                                                style={{
-                                                    display: "block",
-                                                    margin: "5px 0",
-                                                    color: "#666",
-                                                }}
-                                            >
-                                                Km atual:{" "}
-                                                <strong>
-                                                    {v.quilometragem} km
-                                                </strong>
+                                            <small style={{ display: "block", margin: "5px 0", color: "#666" }}>
+                                                Km atual: <strong>{v.quilometragem} km</strong>
                                             </small>
-                                            <small
-                                                style={{
-                                                    display: "block",
-                                                    margin: "5px 0",
-                                                    color: "#007bff",
-                                                }}
-                                            >
-                                                Próxima revisão em:{" "}
-                                                <strong>
-                                                    {v.proxima_revisao_km ?? v.quilometragem + 10000} km
-                                                </strong>
+                                            <small style={{ display: "block", margin: "5px 0", color: "#007bff" }}>
+                                                Próxima revisão em: <strong>{v.proxima_revisao_km ?? v.quilometragem + 10000} km</strong>
                                             </small>
                                             <button
                                                 className="btn-atualizar-km"
-                                                onClick={() =>
-                                                    dispararModalKm(
-                                                        v.id,
-                                                        v.modelo,
-                                                        v.quilometragem,
-                                                    )
-                                                }
+                                                onClick={() => dispararModalKm(v.id, v.modelo, v.quilometragem)}
                                             >
                                                 🔄 Atualizar KM
                                             </button>
                                         </div>
 
                                         {precisaRevisao ? (
-                                            <div
-                                                style={{
-                                                    display: "flex",
-                                                    flexDirection: "column",
-                                                    gap: "8px",
-                                                    alignItems: "flex-end",
-                                                }}
-                                            >
-                                                <span className="status bg-danger">
-                                                    Fazer Revisão
-                                                </span>
+                                            <div style={{ display: "flex", flexDirection: "column", gap: "8px", alignItems: "flex-end" }}>
+                                                <span className="status bg-danger">Fazer Revisão</span>
                                                 <button
                                                     className="btn-revisao-feita"
                                                     onClick={() =>
@@ -311,9 +325,7 @@ function App() {
                                                 </button>
                                             </div>
                                         ) : (
-                                            <span className="status bg-success">
-                                                Em Dia
-                                            </span>
+                                            <span className="status bg-success">Em Dia</span>
                                         )}
                                     </div>
                                 );
@@ -334,26 +346,11 @@ function App() {
                         <div className="modal-botoes">
                             {modal.type === "confirm" ? (
                                 <>
-                                    <button
-                                        className="btn-modal-cancel"
-                                        onClick={fecharModal}
-                                    >
-                                        Cancelar
-                                    </button>
-                                    <button
-                                        className="btn-modal-confirm"
-                                        onClick={modal.onConfirm}
-                                    >
-                                        Confirmar
-                                    </button>
+                                    <button className="btn-modal-cancel" onClick={fecharModal}>Cancelar</button>
+                                    <button className="btn-modal-confirm" onClick={modal.onConfirm}>Confirmar</button>
                                 </>
                             ) : (
-                                <button
-                                    className="btn-modal-confirm"
-                                    onClick={fecharModal}
-                                >
-                                    Fechar
-                                </button>
+                                <button className="btn-modal-confirm" onClick={fecharModal}>Fechar</button>
                             )}
                         </div>
                     </div>
@@ -369,20 +366,12 @@ function App() {
                             Veículo: <strong>{kmModal.modelo}</strong>
                         </p>
 
-                        <div
-                            className="form-grupo"
-                            style={{ textAlign: "left", marginTop: "15px" }}
-                        >
+                        <div className="form-grupo" style={{ textAlign: "left", marginTop: "15px" }}>
                             <label>Nova Quilometragem Atual (km)</label>
                             <input
                                 type="number"
                                 value={kmModal.novaKm}
-                                onChange={(e) =>
-                                    setKmModal({
-                                        ...kmModal,
-                                        novaKm: e.target.value,
-                                    })
-                                }
+                                onChange={(e) => setKmModal({ ...kmModal, novaKm: e.target.value })}
                                 required
                             />
                         </div>
@@ -390,22 +379,11 @@ function App() {
                         <div className="modal-botoes">
                             <button
                                 className="btn-modal-cancel"
-                                onClick={() =>
-                                    setKmModal({
-                                        show: false,
-                                        veiculoId: null,
-                                        modelo: "",
-                                        kmAtual: 0,
-                                        novaKm: "",
-                                    })
-                                }
+                                onClick={() => setKmModal({ show: false, veiculoId: null, modelo: "", kmAtual: 0, novaKm: "" })}
                             >
                                 Cancelar
                             </button>
-                            <button
-                                className="btn-modal-confirm"
-                                onClick={salvarNovaQuilometragem}
-                            >
+                            <button className="btn-modal-confirm" onClick={salvarNovaQuilometragem}>
                                 Salvar Alteração
                             </button>
                         </div>
@@ -413,14 +391,7 @@ function App() {
                 </div>
             )}
 
-            <footer
-                className="footer"
-                style={{
-                    marginTop: "40px",
-                    padding: "15px",
-                    borderRadius: "8px 8px 0 0",
-                }}
-            >
+            <footer className="footer" style={{ marginTop: "40px", padding: "15px", borderRadius: "8px 8px 0 0" }}>
                 <p style={{ margin: 0, fontSize: "13px" }}>
                     ©2026 RotaSync - Disciplina de Back end e Frameworks 3NA - UNINASSAU.
                 </p>
