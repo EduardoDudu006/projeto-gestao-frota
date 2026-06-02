@@ -9,3 +9,4 @@ class Veiculo(Base):
     modelo = Column(String, nullable=False)
     quilometragem = Column(Integer, default=0)
     alerta_revisao = Column(Boolean, default=False)
+    proxima_revisao_km = Column(Integer, default=10000)
