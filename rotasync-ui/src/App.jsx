@@ -349,6 +349,7 @@ function App() {
                                                     display: "block",
                                                     margin: "5px 0",
                                                     color: "#666",
+                                                    border: "1px solid #28a745",
                                                 }}
                                             >
                                                 Km atual:{" "}
@@ -578,6 +579,7 @@ function App() {
 }
 
 export default App;
+
 
 
 
