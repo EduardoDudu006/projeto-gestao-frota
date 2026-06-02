@@ -35,6 +35,14 @@ O ecossistema foi projetado seguindo a separação estrita de responsabilidades:
 **Controle de Segurança CORS:** Configuração do middleware CORSMiddleware no FastAPI para habilitar requisições Cross-Origin seguras vindas da porta do React.
 
 ## 🛠️ Tecnologias e Frameworks Utilizados
+
+O ecossistema do projeto foi construído utilizando tecnologias consolidadas de mercado, garantindo alta performance, tipagem estática e escalabilidade:
+
+* **Front-end:** React.js (Vite), Axios, HTML5, CSS3 Avançado (Flexbox/Grid).
+* **Back-end:** FastAPI (Python 3), Uvicorn.
+* **Banco de Dados & ORM:** SQLite (Engine Local Embutida), SQLAlchemy.
+* **Validação de Dados:** Pydantic (V2).
+
 Back-end: Python 3+, FastAPI, SQLAlchemy (ORM), Pydantic (Validação), Uvicorn (Servidor ASGI).
 
 **Banco de Dados:** SQLite (Em ambiente de desenvolvimento), expansível nativamente para PostgreSQL ou MySQL.
@@ -42,6 +50,66 @@ Back-end: Python 3+, FastAPI, SQLAlchemy (ORM), Pydantic (Validação), Uvicorn 
 **Front-end:** React, Vite (Build Tool), Axios (Cliente HTTP Assíncrono), CSS3 Nativo (Grid, Flexbox, Media Queries).
 
 **Versionamento & Infraestrutura:** Git, GitHub, Render (Hospedagem do Back-end), Vercel (Hospedagem do Front-end).
+
+---
+
+## 🏆 Atendimento Aos Critérios de Avaliação
+
+O projeto foi arquitetado sob o princípio da separação de responsabilidades (SoC), garantindo que cada requisito avaliado fosse implementado seguindo as melhores práticas de Engenharia de Software. Abaixo detalha-se como cada critério foi atendido com excelência:
+
+### 1. Desenvolvimento Back-end Eficiente (FastAPI)
+* **Como foi atendido:** Utilização do framework **FastAPI** para a construção de uma API RESTful de alta performance. O back-end conta com roteamento limpo, injeção de dependências nativa para gerenciamento de sessões do banco de dados (`Depends(get_db)`) e geração automatizada da documentação interativa OpenAPI/Swagger na rota `/docs`.
+
+### 2. Persistência de Dados e Mapeamento ORM (SQLAlchemy)
+* **Como foi atendido:** Em vez do uso de queries SQL puras em formato de texto, foi implementado o **SQLAlchemy** como mapeador objeto-relacional (ORM). 
+    * A classe `VeiculoModel` faz o mapeamento direto das entidades para o banco **SQLite** (`frota.db`).
+    * Foram configuradas chaves primárias automáticas (`primary_key=True`), restrições de integridade de negócios (`unique=True` na coluna de placas) e índices de banco de dados (`index=True`) para garantir consultas otimizadas e de alta velocidade.
+    * A inicialização física das tabelas ocorre de forma automatizada no ciclo de vida da API via `Base.metadata.create_all(bind=engine)`.
+
+### 3. Validação de Dados Rigorosa (Pydantic Schemas)
+* **Como foi atendido:** Separação estrita entre a camada de persistência (`models.py`) e a camada de transferência de dados (DTO) através de schemas do **Pydantic**.
+    * **`VeiculoCreate`**: Valida estritamente os tipos de entrada (`str`, `int`) no ato do cadastro, devolvendo um erro automático `422 Unprocessable Entity` se houver inconformidade, antes mesmo de onerar o banco de dados.
+    * **`UpdateKm`**: Garante a segurança de exposição, isolando e permitindo que apenas a quilometragem seja enviada na rota de atualização do odômetro.
+    * **`VeiculoResponse`**: Aplica a flag `from_attributes = True`, permitindo que objetos de dados complexos do SQLAlchemy sejam serializados de forma limpa e segura em JSON para o front-end, ocultando dados sensíveis ou internos.
+
+### 4. Implementação Completa do CRUD Operacional
+* **Como foi atendido:** O sistema executa todas as quatro operações fundamentais de persistência através de endpoints dedicados:
+    * **Create (Criar):** `POST /veiculos/` para inclusão de novos ativos.
+    * **Read (Ler):** `GET /veiculos/` para listagem da frota.
+    * **Update (Atualizar):** `PUT /veiculos/{id}/quilometragem` e `/registrar-revisao` para mutação de dados e metas.
+    * **Delete (Apagar):** `DELETE /veiculos/{id}` para descarte individual e `DELETE /veiculos/` para expurgar a frota completa (Limpeza em lote).
+
+### 5. Regras de Negócio e Travas de Segurança Preventivas
+* **Como foi atendido:** O software não se limita a salvar dados; ele possui inteligência embarcada que protege a consistência operacional:
+    * **Prevenção de Fraude/Erro de Digitação:** Uma trava lógica no back-end impede que a nova quilometragem inserida seja menor do que a quilometragem atual gravada no banco, disparando um erro `400 Bad Request`.
+    * **Automação de Metas Preventivas:** Ao cadastrar um veículo com `X` km, o sistema calcula autonomamente a meta da primeira revisão para `X + 10.000 km`.
+    * **Cálculo de Status Dinâmico:** Sempre que a quilometragem atinge ou ultrapassa a meta (`quilometragem >= proxima_revisao_km`), o sistema altera a flag `alerta_revisao` para `True`, alterando instantaneamente a interface do usuário. Ao registrar que a revisão foi realizada, o sistema estende a meta em mais `10.000 km` e normaliza o alerta.
+
+### 6. Integração Front-end (React) e Consumo de API Assíncrono
+* **Como foi atendido:** O front-end foi construído em **React** orientado a componentes funcionais e hooks nativos.
+    * **Gerenciamento de Estado:** Hooks como `useState` controlam dinamicamente os modais, formulários e a lista de veículos. O `useEffect` assegura que a frota seja carregada imediatamente no carregamento da página.
+    * **Comunicação Baseada em Promessas:** O cliente **Axios** foi encapsulado em um módulo de serviço (`api.js`) centralizando a URL base da aplicação e lidando com requisições assíncronas (`async/await`) e tratamento de exceções vindas do back-end.
+    * **Segurança de Origem (CORS):** O back-end expõe explicitamente o `CORSMiddleware` configurado com permissões de métodos, cabeçalhos e origens, mitigando bloqueios de requisições cruzadas no navegador.
+
+### 7. Experiência do Usuário (UX/UI) e Reatividade
+* **Como foi atendido:** A interface apresenta um painel administrativo limpo e reativo.
+    * **Modais Customizados:** Em vez de utilizar os alertas nativos e intrusivos do navegador (que degradam a experiência), foram criados cartões de modal flutuantes injetados diretamente na árvore do DOM do React para alertas de sucesso, erros da API e caixas de confirmação crítica (impedindo exclusões acidentais).
+    * **Atualização Otimizada de Estado:** Ao deletar ou modificar um veículo, filtros locais de estado (`setVeiculos(prev => ...)`) removem ou modificam o card instantaneamente em tela, fornecendo feedback visual imediato sem a necessidade de recarregar a página inteira (Single Page Application behavior).
+
+---
+
+## 🗺️ Mapa de Endpoints da API
+
+| Método | Endpoint | Schema de Entrada (Payload) | Resposta (JSON) | Descrição |
+| :--- | :--- | :--- | :--- | :--- |
+| **`POST`** | `/veiculos/` | `VeiculoCreate` | `VeiculoResponse` | Cadastra um veículo e calcula meta de +10k km. |
+| **`GET`** | `/veiculos/` | Nenhum | `List[VeiculoResponse]` | Retorna todos os veículos registrados no banco. |
+| **`PUT`** | `/veiculos/{id}/quilometragem` | `UpdateKm` | `VeiculoResponse` | Atualiza o odômetro e reavalia status de revisão. |
+| **`PUT`** | `/veiculos/{id}/registrar-revisao`| Nenhum | `VeiculoResponse` | Consolida a manutenção e projeta nova meta de +10k km. |
+| **`DELETE`**| `/veiculos/{id}` | Nenhum | `{"detail": "..."}` | Remove um único veículo permanentemente pelo ID. |
+| **`DELETE`**| `/veiculos/` | Nenhum | `{"detail": "..."}` | Zera o banco de dados limpando toda a frota ativa. |
+
+---
 
 ## 🚀 Como Executar o Ecossistema Localmente
 1. Inicializando a API Back-end
