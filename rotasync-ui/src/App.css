@@ -1,123 +1,319 @@
-/* Adicione estas classes ao final do seu arquivo App.css atual */
-
-/* Camada de Fundo Escurecida e Centralizadora */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: rgba(0, 0, 0, 0.55);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-    backdrop-filter: blur(2px);
-    animation: fadeInOverlay 0.2s ease-out;
+/* ==========================================================================
+   1. RESET E CONFIGURAÇÕES GLOBAIS
+   ========================================================================== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
-/* Card do Modal Centralizado seguindo o padrão visual do painel */
-.modal-card {
-    background-color: #ffffff;
-    padding: 30px;
-    border-radius: 8px;
-    width: 90%;
-    max-width: 440px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
-    text-align: center;
-    animation: slideInCard 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+body {
+  background-color: #f4f6f9;
+  color: #333333;
+  padding: 20px;
 }
 
-.modal-card h3 {
-    margin-top: 0;
-    margin-bottom: 12px;
-    color: #1a1a1a;
-    font-size: 20px;
+/* Container Principal */
+.main {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 90vh;
 }
 
-.modal-card p {
-    color: #555555;
-    font-size: 15px;
-    line-height: 1.5;
-    margin-bottom: 20px;
+/* ==========================================================================
+   2. ESTRUTURA DO TOPO E RODAPÉ (HEADER / FOOTER)
+   ========================================================================== */
+.header {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  color: #ffffff;
+  padding: 25px;
+  border-radius: 8px;
+  margin-bottom: 25px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-/* Alinhamento dos botões dos Modals */
-.modal-botoes {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    margin-top: 25px;
+.header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
 }
 
-/* Botões do Modal Customizado */
-.btn-modal-confirm {
-    background-color: #007bff;
-    color: white;
-    border: none;
-    padding: 10px 18px;
-    border-radius: 4px;
-    font-weight: bold;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background 0.2s;
+.subtitulo {
+  color: #94a3b8;
+  font-size: 14px;
+  margin-top: 4px;
 }
 
-.btn-modal-confirm:hover {
-    background-color: #0056b3;
+/* ==========================================================================
+   3. LAYOUT DO PAINEL EM COLUNAS (GRID)
+   ========================================================================== */
+.painel {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 25px;
+  flex: 1;
 }
 
-.btn-modal-cancel {
-    background-color: #e0e0e0;
-    color: #333333;
-    border: none;
-    padding: 10px 18px;
-    border-radius: 4px;
-    font-weight: bold;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background 0.2s;
+/* Dispositivos maiores (Computadores) ganham duas colunas lado a lado */
+@media (min-width: 768px) {
+  .painel {
+    grid-template-columns: 400px 1fr;
+  }
 }
 
-.btn-modal-cancel:hover {
-    background-color: #cccccc;
+/* Cards Laterais */
+.card {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  height: fit-content;
 }
 
-/* Botão Concluir Manutenção */
+.card h2 {
+  font-size: 18px;
+  color: #1e293b;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #f1f5f9;
+  padding-bottom: 10px;
+}
+
+/* ==========================================================================
+   4. FORMULÁRIOS E INPUTS
+   ========================================================================== */
+.form-grupo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.form-grupo label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.form-grupo input {
+  padding: 10px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 14px;
+  background-color: #f8fafc;
+  transition: all 0.2s;
+}
+
+.form-grupo input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+/* Botão Vermelho/Azul de Enviar Formulário */
+.btn-submit {
+  width: 100%;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 10px;
+}
+
+.btn-submit:hover {
+  background-color: #2563eb;
+}
+
+/* ==========================================================================
+   5. LISTAGEM DE VEÍCULOS (FROTA)
+   ========================================================================== */
+.veiculo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.veiculo-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background-color: #f8fafc;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.veiculo-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.veiculo-info strong {
+  font-size: 16px;
+  color: #0f172a;
+}
+
+/* Botão sutil de atualizar KM interno do item */
+.btn-atualizar-km {
+  background: none;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 8px;
+  display: inline-block;
+  transition: all 0.2s;
+}
+
+.btn-atualizar-km:hover {
+  background-color: #f1f5f9;
+  color: #1e293b;
+  border-color: #94a3b8;
+}
+
+/* ==========================================================================
+   6. BADGES DE STATUS (EM DIA / REVISÃO)
+   ========================================================================== */
+.status {
+  padding: 6px 12px;
+  border-radius: 50px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-block;
+}
+
+.bg-success {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.bg-danger {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+/* Botão de Ação: Revisão Realizada */
 .btn-revisao-feita {
-    background-color: #28a745;
-    color: white;
-    border: none;
-    padding: 7px 14px;
-    border-radius: 4px;
-    font-size: 12px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background 0.2s;
+  background-color: #16a34a;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  box-shadow: 0 2px 4px rgba(22, 163, 74, 0.2);
 }
 
 .btn-revisao-feita:hover {
-    background-color: #1e7e34;
+  background-color: #15803d;
 }
 
-/* Animações de entrada fluida */
+/* ==========================================================================
+   7. MODALS CUSTOMIZADOS (CENTRALIZADOS NA TELA)
+   ========================================================================== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(15, 23, 42, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  backdrop-filter: blur(4px);
+  animation: fadeInOverlay 0.2s ease-out;
+}
+
+.modal-card {
+  background-color: #ffffff;
+  padding: 30px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 450px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  text-align: center;
+  animation: slideInCard 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.15);
+}
+
+.modal-card h3 {
+  margin-bottom: 12px;
+  color: #1e293b;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.modal-card p {
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.modal-botoes {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.btn-modal-confirm {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.btn-modal-confirm:hover {
+  background-color: #2563eb;
+}
+
+.btn-modal-cancel {
+  background-color: #f1f5f9;
+  color: #475569;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.btn-modal-cancel:hover {
+  background-color: #e2e8f0;
+}
+
+/* ==========================================================================
+   8. ANIMAÇÕES
+   ========================================================================== */
 @keyframes fadeInOverlay {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes slideInCard {
-    from {
-        transform: translateY(-20px);
-        opacity: 0;
-    }
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
+  from { transform: translateY(-30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
-
