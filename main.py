@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List
 from sqlalchemy import create_engine, Column, Integer, String, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
@@ -23,12 +23,13 @@ class VeiculoModel(Base):
     proxima_revisao_km = Column(Integer, nullable=False)
     alerta_revisao = Column(Boolean, default=False)
 
-# Cria as tabelas se elas não existirem
+# Cria as tabelas fisicamente se elas não existirem
 Base.metadata.create_all(bind=engine)
 
 # --- CONFIGURAÇÃO DA API FASTAPI ---
 app = FastAPI(title="RotaSync API - Gestão de Frota")
 
+# Habilita conexões vindas do ecossistema do React
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -37,6 +38,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Gerenciador de conexão com o Banco
 def get_db():
     db = SessionLocal()
     try:
@@ -68,7 +70,7 @@ class VeiculoResponse(BaseModel):
 
 @app.post("/veiculos/", response_model=VeiculoResponse)
 def cadastrar_veiculo(veiculo: VeiculoCreate, db: Session = Depends(get_db)):
-    placa_existente = db.query(VeiculoModel).filter(VeiculoModel.placa == veiculo.placa).first()
+    placa_existente = db.query(VeiculoModel).filter(VeiculoModel.placa == veiculo.placa.upper()).first()
     if placa_existente:
         raise HTTPException(status_code=400, detail="Já existe um veículo cadastrado com esta placa.")
 
@@ -128,7 +130,6 @@ def registrar_revisao(veiculo_id: int, db: Session = Depends(get_db)):
     return veiculo
 
 
-# NOVA ROTA: Apagar um veículo específico por ID
 @app.delete("/veiculos/{veiculo_id}")
 def apagar_veiculo(veiculo_id: int, db: Session = Depends(get_db)):
     veiculo = db.query(VeiculoModel).filter(VeiculoModel.id == veiculo_id).first()
