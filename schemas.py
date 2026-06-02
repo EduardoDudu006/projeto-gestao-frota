@@ -14,3 +14,6 @@ class VeiculoResponse(VeiculoBase):
 
     class Config:
         from_attributes = True
+
+class VeiculoUpdateKM(BaseModel):
+    quilometragem: int

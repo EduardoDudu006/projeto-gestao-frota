@@ -2,7 +2,7 @@
 // useState (para guardar dados na memória da tela) e useEffect (para executar ações quando a tela carrega)
 import { useState, useEffect } from "react";
 
-// Importa a configuração do Axios que aponta para o nosso back-end (localhost:8000)
+// Importa a configuração do Axios que aponta para o nosso back-end (com o prefixo /api embutido)
 import api from "./services/api";
 
 // Importa o arquivo de estilos CSS
@@ -13,7 +13,7 @@ function App() {
     // Variáveis que, quando alteradas, fazem a tela ser redesenhada (renderizada) automaticamente
     const [veiculos, setVeiculos] = useState([]); // Guarda a lista de veículos vinda da API
 
-    // Estados individuais para os campos do formulário
+    // Estados individuais para os campos do formulário de cadastro
     const [placa, setPlaca] = useState("");
     const [modelo, setModelo] = useState("");
     const [quilometragem, setQuilometragem] = useState("");
@@ -65,6 +65,67 @@ function App() {
         }
     };
 
+    // Função responsável por gerenciar a atualização da KM (Método PUT)
+    const handleAtualizarKm = async (id, kmAtual) => {
+        // SEGURANÇA CONTRA ERRO 404: Se o id vier vazio por erro de mapeamento do banco, mata a execução antes do erro acontecer
+        if (id === undefined || id === null) {
+            alert(
+                "Erro do Sistema: O ID do veículo não foi encontrado na listagem. Verifique o mapeamento da sua chave primária.",
+            );
+            return;
+        }
+
+        // Abre uma caixinha perguntando a nova KM, já sugerindo o valor atual dentro do campo
+        const novaKm = prompt(
+            `Digite a nova quilometragem do veículo (Atual: ${kmAtual} km):`,
+            kmAtual,
+        );
+
+        // Se o usuário clicar em "Cancelar" ou fechar a caixinha sem digitar nada, interrompe a função
+        if (novaKm === null || novaKm === "") return;
+
+        const kmFormatada = parseInt(novaKm);
+
+        // Validação rápida de integridade no próprio front-end
+        if (isNaN(kmFormatada) || kmFormatada < 0) {
+            alert(
+                "Por favor, insira um número válido e maior que zero para a quilometragem.",
+            );
+            return;
+        }
+
+        try {
+            // Faz a chamada PUT para a API passando o ID na URL e a nova quilometragem no corpo (JSON)
+            // IMPORTANTE: Sem barra no final para casar exatamente com o padrão definido no FastAPI
+            await api.put(`/veiculos/${id}/quilometragem`, {
+                quilometragem: kmFormatada,
+            });
+
+            // Atualiza o estado do React localmente fazendo um map. Isso altera o valor na tela
+            // em tempo real sem precisar forçar um F5 na página inteira!
+            setVeiculos(
+                veiculos.map((v) =>
+                    v.id === id
+                        ? {
+                              ...v,
+                              quilometragem: kmFormatada,
+                              alerta_revisao: kmFormatada >= 10000, // Sincroniza a regra visual com o back-end
+                          }
+                        : v,
+                ),
+            );
+
+            alert("Quilometragem atualizada com sucesso!");
+        } catch (error) {
+            console.error("Erro completo da requisição PUT:", error);
+            // Captura o erro real retornado pelo FastAPI e mostra no alert do cliente
+            alert(
+                error.response?.data?.detail ||
+                    "Não foi possível atualizar a quilometragem. Verifique a rota ou conexões.",
+            );
+        }
+    };
+
     // --- RENDERIZAÇÃO DA TELA (JSX) ---
     return (
         <div className="main">
@@ -76,7 +137,7 @@ function App() {
 
             {/* Container principal que divide a tela em duas colunas usando CSS Grid */}
             <main className="painel">
-                {/* COLUNA 1: FORMULÁRIO */}
+                {/* COLUNA 1: FORMULÁRIO DE CADASTRO */}
                 <section className="card">
                     <h2>Novo Veículo</h2>
 
@@ -120,28 +181,48 @@ function App() {
                     </form>
                 </section>
 
-                {/* COLUNA 2: LISTAGEM DA FROTA */}
+                {/* COLUNA 2: LISTAGEM DA FROTA ATIVA */}
                 <section className="card">
                     <h2>Frota Ativa</h2>
                     <div className="veiculo-list">
-                        {/* Lógica condicional: Se a lista estiver vazia, mostra uma mensagem. */}
+                        {/* Lógica condicional (Ternário): Se a lista estiver vazia, mostra aviso. */}
                         {veiculos.length === 0 ? (
                             <p>Nenhum veículo registrado.</p>
                         ) : (
                             // Se tiver veículos, usa a função map() para percorrer o array
-                            // e desenhar um "card" (div) para cada veículo retornado pelo back-end.
+                            // e desenhar um item de lista estruturado para cada veículo vindo do banco.
                             veiculos.map((v) => (
                                 <div className="veiculo-item" key={v.id}>
-                                    <div>
-                                        <strong>{v.modelo}</strong> ({v.placa}){" "}
-                                        <br />
-                                        <small>
-                                            {v.quilometragem} km rodados
+                                    <div className="veiculo-info">
+                                        <strong>{v.modelo}</strong> ({v.placa})
+                                        <small
+                                            style={{
+                                                display: "block",
+                                                margin: "5px 0",
+                                                color: "#666",
+                                            }}
+                                        >
+                                            Km atual:{" "}
+                                            <strong>
+                                                {v.quilometragem} km
+                                            </strong>
                                         </small>
+                                        {/* Botão de atualização fixado de forma limpa abaixo dos dados do veículo */}
+                                        <button
+                                            className="btn-atualizar-km"
+                                            onClick={() =>
+                                                handleAtualizarKm(
+                                                    v.id,
+                                                    v.quilometragem,
+                                                )
+                                            }
+                                        >
+                                            🔄 Atualizar KM
+                                        </button>
                                     </div>
 
                                     {/* Validação visual: Lê o booleano 'alerta_revisao' processado pela
-                      regra de negócio no back-end. Se true, pinta de vermelho. Se false, verde. */}
+                                        regra de negócio no back-end. Se true, pinta de vermelho (danger). Se false, verde (success). */}
                                     {v.alerta_revisao ? (
                                         <span className="status bg-danger">
                                             Fazer Revisão
@@ -157,6 +238,8 @@ function App() {
                     </div>
                 </section>
             </main>
+
+            {/* Rodapé institucional exigido pelos critérios de avaliação */}
             <footer className="footer">
                 <p>
                     ©2026 Todos os direitos reservados - Projeto desenvolvido na
@@ -167,10 +250,6 @@ function App() {
     );
 }
 
-// Exporta o componente App para ser carregado pelo main.jsx
+// Exporta o componente App para ser carregado globalmente pelo index / main.jsx
 export default App;
-
-
-
-
 

@@ -136,6 +136,24 @@ h2 {
     background-color: var(--success);
 }
 
+.btn-atualizar-km {
+  background-color: transparent;
+  color: var(--primary); /* Usa a cor azul padrão do seu sistema */
+  border: 1px solid var(--primary);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.85em;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: all 0.2s ease;
+  font-weight: 600;
+}
+
+.btn-atualizar-km:hover {
+  background-color: var(--primary);
+  color: white;
+}
+
 footer {
     text-align: center;
 }

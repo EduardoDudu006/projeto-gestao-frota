@@ -71,6 +71,7 @@ def cadastrar_veiculo(veiculo: schemas.VeiculoCreate, db: Session = Depends(get_
         db.rollback()
         raise HTTPException(status_code=500, detail="Erro interno ao salvar no banco de dados.")
 
+
 # Rota GET para listar todos os veículos cadastrados.
 @app.get("/api/veiculos/", response_model=list[schemas.VeiculoResponse])
 def listar_veiculos(db: Session = Depends(get_db)):
@@ -80,3 +81,34 @@ def listar_veiculos(db: Session = Depends(get_db)):
         return veiculos
     except Exception as e:
         raise HTTPException(status_code=500, detail="Erro ao buscar veículos.")
+
+
+# Rota PUT para atualizar a quilometragem e reavaliar a revisão preventiva (O "U" do CRUD)
+@app.put("/api/veiculos/{veiculo_id}/quilometragem", response_model=schemas.VeiculoResponse)
+def atualizar_quilometragem(veiculo_id: int, dados: schemas.VeiculoUpdateKM, db: Session = Depends(get_db)):
+    # 1. Busca o veículo correspondente ao ID recebido na URL
+    veiculo = db.query(models.Veiculo).filter(models.Veiculo.id == veiculo_id).first()
+
+    # 2. Se o ID não existir no banco, retorna o status de erro 404 (Not Found)
+    if not veiculo:
+        raise HTTPException(status_code=404, detail="Veículo não encontrado no banco de dados.")
+
+    try:
+        # 3. Substitui a quilometragem antiga pela nova enviada pelo formulário/prompt
+        veiculo.quilometragem = dados.quilometragem
+
+        # 4. REAVALIAÇÃO DA REGRA DE NEGÓCIO: Recalcula se o veículo precisa ou não de revisão
+        if dados.quilometragem >= 10000:
+            veiculo.alerta_revisao = True
+        else:
+            veiculo.alerta_revisao = False
+
+        # 5. Confirma a transação salvando definitivamente as alterações no banco de dados
+        db.commit()
+        db.refresh(veiculo) # Atualiza o objeto com os dados fresquinhos salvos
+
+        return veiculo # Retorna o veículo atualizado no formato JSON para o React
+
+    except Exception as e:
+        db.rollback() # Desfaz qualquer lambança caso o banco de dados trave no meio do processo
+        raise HTTPException(status_code=500, detail="Erro interno ao atualizar a quilometragem no banco de dados.")
