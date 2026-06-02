@@ -9,8 +9,9 @@ function App() {
     const [modelo, setModelo] = useState("");
     const [quilometragem, setQuilometragem] = useState("");
 
-    // Estado local para desativar a trava de veículo novo após a revisão ser feita em tela
-    const [revisadosLocal, setRevisadosLocal] = useState([]);
+    // Estados de controle para gerenciar o ciclo de vida dos status sem conflito matemático
+    const [historicoRevisados, setHistoricoRevisados] = useState([]);
+    const [ignorarTravaNovo, setIgnorarTravaNovo] = useState([]);
 
     // --- ESTADOS DOS MODALS CUSTOMIZADOS (CARDS) ---
     const [modal, setModal] = useState({
@@ -130,8 +131,11 @@ function App() {
                 quilometragem: kmFormatada,
             });
 
-            // Se mudou a KM, remove do estado de revisados para recalcular o status real do banco
-            setRevisadosLocal(prev => prev.filter(id => id !== kmModal.veiculoId));
+            // 1. Marca que o veículo foi atualizado (ignora a trava restritiva de veículo novo)
+            setIgnorarTravaNovo(prev => [...prev, kmModal.veiculoId]);
+
+            // 2. Remove do histórico de revisados para que o alerta real do banco volte a funcionar se ele atingir a nova meta
+            setHistoricoRevisados(prev => prev.filter(id => id !== kmModal.veiculoId));
 
             setKmModal({
                 show: false,
@@ -157,8 +161,8 @@ function App() {
         try {
             await api.put(`/veiculos/${id}/registrar-revisao`);
 
-            // Registra localmente que este veículo acabou de passar por uma revisão válida
-            setRevisadosLocal(prev => [...prev, id]);
+            // Inclui no histórico de revisões feitas nesta sessão
+            setHistoricoRevisados(prev => [...prev, id]);
 
             carregarVeiculos();
             abrirAlerta(
@@ -229,13 +233,15 @@ function App() {
                             <p>Nenhum veículo registrado.</p>
                         ) : (
                             veiculos.map((v) => {
-                                const foiRevisadoEmTela = revisadosLocal.includes(v.id);
+                                const foiRevisado = historicoRevisados.includes(v.id);
+                                const mudouKm = ignorarTravaNovo.includes(v.id);
 
-                                // LÓGICA INTELIGENTE DE STATUS:
-                                // Só aciona o gatilho de veículo novo se ele NÃO tiver sido revisado nesta ação do usuário
+                                // LÓGICA DE STATUS BLINDADA:
+                                // O veículo precisa de revisão se o back-end mandar o alerta (v.alerta_revisao)
+                                // OU se for um veículo novo na lista (não revisado e não modificado ainda) com mais de 10.000 km iniciais.
                                 const precisaRevisao =
                                     v.alerta_revisao ||
-                                    (!foiRevisadoEmTela && v.proxima_revisao_km === v.quilometragem + 10000 && v.quilometragem >= 10000);
+                                    (!foiRevisado && !mudouKm && v.proxima_revisao_km === v.quilometragem + 10000 && v.quilometragem >= 10000);
 
                                 return (
                                     <div className="veiculo-item" key={v.id}>
@@ -416,7 +422,7 @@ function App() {
                 }}
             >
                 <p style={{ margin: 0, fontSize: "13px" }}>
-                    ©2026 RotaSync - Projeto Desenvolvido na Disciplina de Back end e Frameworks 3NA - UNINASSAU.
+                    ©2026 RotaSync - Disciplina de Back end e Frameworks 3NA - UNINASSAU.
                 </p>
             </footer>
         </div>
