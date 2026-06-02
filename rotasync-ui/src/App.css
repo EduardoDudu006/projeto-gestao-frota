@@ -74,12 +74,12 @@ body {
 footer {
   background: linear-gradient(135deg, var(--cor-primaria) 0%, #18284d 30%, var(--cor-primaria) 135%);
   color: #ffffff;
+  text-align: center;
   padding: 25px 20px;
   width: 100%;       /* MODIFICADO: Força 100% de largura horizontal */
   border-radius: 0;  /* MODIFICADO: Removido para preencher totalmente a base */
   margin-top: auto;  /* MODIFICADO: Garante que o rodapé seja empurrado para o final da página */
   box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
-  text-align: center;
 }
 
 /* ==========================================================================

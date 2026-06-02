@@ -9,6 +9,9 @@ function App() {
     const [modelo, setModelo] = useState("");
     const [quilometragem, setQuilometragem] = useState("");
 
+    // Estado local para desativar a trava de veículo novo após a revisão ser feita em tela
+    const [revisadosLocal, setRevisadosLocal] = useState([]);
+
     // --- ESTADOS DOS MODALS CUSTOMIZADOS (CARDS) ---
     const [modal, setModal] = useState({
         show: false,
@@ -80,12 +83,10 @@ function App() {
         try {
             const kmInicial = parseInt(quilometragem);
 
-            // Enviando o estado do alerta calculado com base na quilometragem inicial
             await api.post("/veiculos/", {
                 placa: placa,
                 modelo: modelo,
-                quilometragem: kmInicial,
-                alerta_revisao: kmInicial >= 10000,
+                quilometragem: kmInicial
             });
 
             setPlaca("");
@@ -94,12 +95,12 @@ function App() {
             carregarVeiculos();
             abrirAlerta(
                 "Sucesso 🎉",
-                "Veículo registrado com sucesso na frota!",
+                "Veículo registrado com sucesso na frota!"
             );
         } catch (error) {
             abrirAlerta(
                 "Erro ❌",
-                error.response?.data?.detail || "Erro ao realizar o cadastro.",
+                error.response?.data?.detail || "Erro ao realizar o cadastro."
             );
         }
     };
@@ -119,7 +120,7 @@ function App() {
         if (isNaN(kmFormatada) || kmFormatada < 0) {
             abrirAlerta(
                 "Aviso ⚠️",
-                "Insira um número de quilometragem válido.",
+                "Insira um número de quilometragem válido."
             );
             return;
         }
@@ -128,6 +129,10 @@ function App() {
             await api.put(`/veiculos/${kmModal.veiculoId}/quilometragem`, {
                 quilometragem: kmFormatada,
             });
+
+            // Se mudou a KM, remove do estado de revisados para recalcular o status real do banco
+            setRevisadosLocal(prev => prev.filter(id => id !== kmModal.veiculoId));
+
             setKmModal({
                 show: false,
                 veiculoId: null,
@@ -135,15 +140,15 @@ function App() {
                 kmAtual: 0,
                 novaKm: "",
             });
-            carregarVeiculos(); // Recarrega direto do banco garantindo sincronia
+            carregarVeiculos();
             abrirAlerta(
                 "Atualizado 🔄",
-                "Quilometragem do veículo atualizada!",
+                "Quilometragem do veículo atualizada!"
             );
         } catch (error) {
             abrirAlerta(
                 "Erro ❌",
-                error.response?.data?.detail || "Erro ao atualizar dados.",
+                error.response?.data?.detail || "Erro ao atualizar dados."
             );
         }
     };
@@ -151,15 +156,19 @@ function App() {
     const executarRegistroRevisao = async (id) => {
         try {
             await api.put(`/veiculos/${id}/registrar-revisao`);
-            carregarVeiculos(); // Recarga sincronizada com o banco
+
+            // Registra localmente que este veículo acabou de passar por uma revisão válida
+            setRevisadosLocal(prev => [...prev, id]);
+
+            carregarVeiculos();
             abrirAlerta(
                 "Sucesso 🔧",
-                "Revisão efetuada! Meta estendida por mais 10.000 km.",
+                "Revisão efetuada! Meta estendida por mais 10.000 km."
             );
         } catch (error) {
             abrirAlerta(
                 "Erro ❌",
-                error.response?.data?.detail || "Erro ao registrar revisão.",
+                error.response?.data?.detail || "Erro ao registrar revisão."
             );
         }
     };
@@ -202,9 +211,7 @@ function App() {
                                 type="number"
                                 placeholder="0"
                                 value={quilometragem}
-                                onChange={(e) =>
-                                    setQuilometragem(e.target.value)
-                                }
+                                onChange={(e) => setQuilometragem(e.target.value)}
                                 required
                             />
                         </div>
@@ -222,18 +229,18 @@ function App() {
                             <p>Nenhum veículo registrado.</p>
                         ) : (
                             veiculos.map((v) => {
-                                // CORREÇÃO INTERNA DE STATUS:
-                                // Se o back-end retornar o alerta como true OU se for um veículo novo sem próxima revisão cadastrada com mais de 10k km.
+                                const foiRevisadoEmTela = revisadosLocal.includes(v.id);
+
+                                // LÓGICA INTELIGENTE DE STATUS:
+                                // Só aciona o gatilho de veículo novo se ele NÃO tiver sido revisado nesta ação do usuário
                                 const precisaRevisao =
                                     v.alerta_revisao ||
-                                    (!v.proxima_revisao_km &&
-                                        v.quilometragem >= 10000);
+                                    (!foiRevisadoEmTela && v.proxima_revisao_km === v.quilometragem + 10000 && v.quilometragem >= 10000);
 
                                 return (
                                     <div className="veiculo-item" key={v.id}>
                                         <div className="veiculo-info">
-                                            <strong>{v.modelo}</strong> (
-                                            {v.placa})
+                                            <strong>{v.modelo}</strong> ({v.placa})
                                             <small
                                                 style={{
                                                     display: "block",
@@ -255,10 +262,7 @@ function App() {
                                             >
                                                 Próxima revisão em:{" "}
                                                 <strong>
-                                                    {v.proxima_revisao_km ??
-                                                        v.quilometragem +
-                                                            10000}{" "}
-                                                    km
+                                                    {v.proxima_revisao_km ?? v.quilometragem + 10000} km
                                                 </strong>
                                             </small>
                                             <button
@@ -293,10 +297,7 @@ function App() {
                                                         abrirConfirmacao(
                                                             "Confirmar Revisão 🔧",
                                                             `Deseja confirmar que a revisão do veículo ${v.modelo} foi feita? Isso acrescentará 10.000 km na próxima meta de manutenção.`,
-                                                            () =>
-                                                                executarRegistroRevisao(
-                                                                    v.id,
-                                                                ),
+                                                            () => executarRegistroRevisao(v.id),
                                                         )
                                                     }
                                                 >
@@ -415,8 +416,7 @@ function App() {
                 }}
             >
                 <p style={{ margin: 0, fontSize: "13px" }}>
-                    ©2026 RotaSync - Disciplina de Back end e Frameworks 3NA -
-                    UNINASSAU.
+                    ©2026 RotaSync - Projeto Desenvolvido na Disciplina de Back end e Frameworks 3NA - UNINASSAU.
                 </p>
             </footer>
         </div>
