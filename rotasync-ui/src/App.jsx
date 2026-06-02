@@ -80,7 +80,7 @@ function App() {
         try {
             const kmInicial = parseInt(quilometragem);
 
-            // CORREÇÃO: Enviando o estado do alerta calculado com base na quilometragem inicial
+            // Enviando o estado do alerta calculado com base na quilometragem inicial
             await api.post("/veiculos/", {
                 placa: placa,
                 modelo: modelo,
@@ -148,10 +148,10 @@ function App() {
         }
     };
 
-    const ejecutarRegistroRevisao = async (id) => {
+    const executarRegistroRevisao = async (id) => {
         try {
             await api.put(`/veiculos/${id}/registrar-revisao`);
-            carregarVeiculos(); // Recarga sincronizada com o SQLite
+            carregarVeiculos(); // Recarga sincronizada com o banco
             abrirAlerta(
                 "Sucesso 🔧",
                 "Revisão efetuada! Meta estendida por mais 10.000 km.",
@@ -221,92 +221,102 @@ function App() {
                         {veiculos.length === 0 ? (
                             <p>Nenhum veículo registrado.</p>
                         ) : (
-                            veiculos.map((v) => (
-                                <div className="veiculo-item" key={v.id}>
-                                    <div className="veiculo-info">
-                                        <strong>{v.modelo}</strong> ({v.placa})
-                                        <small
-                                            style={{
-                                                display: "block",
-                                                margin: "5px 0",
-                                                color: "#666",
-                                            }}
-                                        >
-                                            Km atual:{" "}
-                                            <strong>
-                                                {v.quilometragem} km
-                                            </strong>
-                                        </small>
-                                        <small
-                                            style={{
-                                                display: "block",
-                                                margin: "5px 0",
-                                                color: "#007bff",
-                                            }}
-                                        >
-                                            Próxima revisão em:{" "}
-                                            <strong>
-                                                {v.proxima_revisao_km ??
-                                                    v.quilometragem +
-                                                        10000}{" "}
-                                                km
-                                            </strong>
-                                        </small>
-                                        <button
-                                            className="btn-atualizar-km"
-                                            onClick={() =>
-                                                dispararModalKm(
-                                                    v.id,
-                                                    v.modelo,
-                                                    v.quilometragem,
-                                                )
-                                            }
-                                        >
-                                            🔄 Atualizar KM
-                                        </button>
-                                    </div>
+                            veiculos.map((v) => {
+                                // CORREÇÃO INTERNA DE STATUS:
+                                // Se o back-end retornar o alerta como true OU se for um veículo novo sem próxima revisão cadastrada com mais de 10k km.
+                                const precisaRevisao =
+                                    v.alerta_revisao ||
+                                    (!v.proxima_revisao_km &&
+                                        v.quilometragem >= 10000);
 
-                                    {v.alerta_revisao ? (
-                                        <div
-                                            style={{
-                                                display: "flex",
-                                                flexDirection: "column",
-                                                gap: "8px",
-                                                alignItems: "flex-end",
-                                            }}
-                                        >
-                                            <span className="status bg-danger">
-                                                Fazer Revisão
-                                            </span>
+                                return (
+                                    <div className="veiculo-item" key={v.id}>
+                                        <div className="veiculo-info">
+                                            <strong>{v.modelo}</strong> (
+                                            {v.placa})
+                                            <small
+                                                style={{
+                                                    display: "block",
+                                                    margin: "5px 0",
+                                                    color: "#666",
+                                                }}
+                                            >
+                                                Km atual:{" "}
+                                                <strong>
+                                                    {v.quilometragem} km
+                                                </strong>
+                                            </small>
+                                            <small
+                                                style={{
+                                                    display: "block",
+                                                    margin: "5px 0",
+                                                    color: "#007bff",
+                                                }}
+                                            >
+                                                Próxima revisão em:{" "}
+                                                <strong>
+                                                    {v.proxima_revisao_km ??
+                                                        v.quilometragem +
+                                                            10000}{" "}
+                                                    km
+                                                </strong>
+                                            </small>
                                             <button
-                                                className="btn-revisao-feita"
+                                                className="btn-atualizar-km"
                                                 onClick={() =>
-                                                    abrirConfirmacao(
-                                                        "Confirmar Revisão 🔧",
-                                                        `Deseja confirmar que a revisão do veículo ${v.modelo} foi feita? Isso acrescentará 10.000 km na próxima meta de manutenção.`,
-                                                        () =>
-                                                            executarRegistroRevisao(
-                                                                v.id,
-                                                            ),
+                                                    dispararModalKm(
+                                                        v.id,
+                                                        v.modelo,
+                                                        v.quilometragem,
                                                     )
                                                 }
                                             >
-                                                🔧 Revisão Realizada
+                                                🔄 Atualizar KM
                                             </button>
                                         </div>
-                                    ) : (
-                                        <span className="status bg-success">
-                                            Em Dia
-                                        </span>
-                                    )}
-                                </div>
-                            ))
+
+                                        {precisaRevisao ? (
+                                            <div
+                                                style={{
+                                                    display: "flex",
+                                                    flexDirection: "column",
+                                                    gap: "8px",
+                                                    alignItems: "flex-end",
+                                                }}
+                                            >
+                                                <span className="status bg-danger">
+                                                    Fazer Revisão
+                                                </span>
+                                                <button
+                                                    className="btn-revisao-feita"
+                                                    onClick={() =>
+                                                        abrirConfirmacao(
+                                                            "Confirmar Revisão 🔧",
+                                                            `Deseja confirmar que a revisão do veículo ${v.modelo} foi feita? Isso acrescentará 10.000 km na próxima meta de manutenção.`,
+                                                            () =>
+                                                                executarRegistroRevisao(
+                                                                    v.id,
+                                                                ),
+                                                        )
+                                                    }
+                                                >
+                                                    🔧 Revisão Realizada
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <span className="status bg-success">
+                                                Em Dia
+                                            </span>
+                                        )}
+                                    </div>
+                                );
+                            })
                         )}
                     </div>
                 </section>
             </main>
 
-            {/* --- CARDS DE MODAL CENTRALIZADOS NO PADRÃO DA PÁGINA --- */}
+            {/* --- CARDS DE MODAL CENTRALIZADOS --- */}
 
             {/* 1. Modal de Notificação Geral (Alertas / Confirmações) */}
             {modal.show && (
