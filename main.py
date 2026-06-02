@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
-from sqlalchemy import create_database_uri, create_engine, Column, Integer, String, Boolean
+from sqlalchemy import create_engine, Column, Integer, String, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 
@@ -29,7 +29,6 @@ Base.metadata.create_all(bind=engine)
 # --- CONFIGURAÇÃO DA API FASTAPI ---
 app = FastAPI(title="RotaSync API - Gestão de Frota")
 
-# Permite conexões do Front-end (React)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -38,7 +37,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Injeção de dependência do Banco de Dados
 def get_db():
     db = SessionLocal()
     try:
@@ -70,12 +68,10 @@ class VeiculoResponse(BaseModel):
 
 @app.post("/veiculos/", response_model=VeiculoResponse)
 def cadastrar_veiculo(veiculo: VeiculoCreate, db: Session = Depends(get_db)):
-    # Verifica se a placa já existe
     placa_existente = db.query(VeiculoModel).filter(VeiculoModel.placa == veiculo.placa).first()
     if placa_existente:
         raise HTTPException(status_code=400, detail="Já existe um veículo cadastrado com esta placa.")
 
-    # Define a meta inicial de revisão baseada na quilometragem de cadastro (+10.000km)
     meta_inicial = veiculo.quilometragem + 10000
 
     novo_veiculo = VeiculoModel(
@@ -108,7 +104,6 @@ def atualizar_quilometragem(veiculo_id: int, dados: UpdateKm, db: Session = Depe
 
     veiculo.quilometragem = dados.quilometragem
 
-    # REGRA DE NEGÓCIO: Se alcançou ou passou da meta de revisão, dispara o alerta
     if veiculo.quilometragem >= veiculo.proxima_revisao_km:
         veiculo.alerta_revisao = True
     else:
@@ -125,19 +120,33 @@ def registrar_revisao(veiculo_id: int, db: Session = Depends(get_db)):
     if not veiculo:
         raise HTTPException(status_code=404, detail="Veículo não encontrado.")
 
-    # REGRA DE NEGÓCIO: Define a nova meta para +10.000 km à frente da quilometragem atual externa
     veiculo.proxima_revisao_km = veiculo.quilometragem + 10000
-    veiculo.alerta_revisao = False  # Apaga o alerta de revisão do banco
+    veiculo.alerta_revisao = False
 
     db.commit()
     db.refresh(veiculo)
     return veiculo
 
 
+# NOVA ROTA: Apagar um veículo específico por ID
+@app.delete("/veiculos/{veiculo_id}")
+def apagar_veiculo(veiculo_id: int, db: Session = Depends(get_db)):
+    veiculo = db.query(VeiculoModel).filter(VeiculoModel.id == veiculo_id).first()
+    if not veiculo:
+        raise HTTPException(status_code=404, detail="Veículo não encontrado.")
+
+    try:
+        db.delete(veiculo)
+        db.commit()
+        return {"detail": f"Veículo {veiculo.modelo} removido com sucesso!"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Erro ao tentar remover o veículo.")
+
+
 @app.delete("/veiculos/")
 def apagar_todos_veiculos(db: Session = Depends(get_db)):
     try:
-        # Executa a limpeza total da tabela
         db.query(VeiculoModel).delete()
         db.commit()
         return {"detail": "Todos os veículos foram removidos da frota com sucesso!"}
