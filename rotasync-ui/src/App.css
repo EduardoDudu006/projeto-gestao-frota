@@ -1,4 +1,26 @@
 /* ==========================================================================
+   🎨 PALETA DE CORES (Mantida exatamente como o seu original)
+   ========================================================================== */
+:root {
+  --cor-fundo-tela: #f5f7fa;       /* Cor de fundo da página inteira */
+  --cor-card-background: #ffffff;  /* Fundo dos cards brancos */
+  --cor-texto-principal: #1e293b;  /* Cor dos títulos principais */
+  --cor-texto-secundario: #64748b; /* Cor dos textos menores/legendas */
+
+  /* Cores de Destaque */
+  --cor-primaria: #007bff;         /* Cor dos botões principais e links (Padrão Azul) */
+  --cor-primaria-hover: #0056b3;   /* Cor do botão ao passar o mouse */
+  --cor-sucesso: #28a745;          /* Verde para "Em Dia" */
+  --cor-sucesso-fundo: #d4edda;    /* Fundo verde claro */
+  --cor-perigo: #dc3545;           /* Vermelho para "Fazer Revisão" */
+  --cor-perigo-fundo: #f8d7da;     /* Fundo vermelho claro */
+
+  /* Bordas e Espaçamentos */
+  --cor-borda: #cccccc;            /* Cor das bordas dos inputs e divisores */
+  --border-radius-padrao: 5px;     /* Arredondamento dos cantos */
+}
+
+/* ==========================================================================
    1. RESET E CONFIGURAÇÕES GLOBAIS
    ========================================================================== */
 * {
@@ -9,76 +31,94 @@
 }
 
 body {
-  background-color: #f4f6f9;
+  background-color: var(--cor-fundo-tela);
   color: #333333;
-  padding: 20px;
+  padding: 0; /* MODIFICADO: Zerado para permitir que Header e Footer encostem nas bordas */
 }
 
 /* Container Principal */
 .main {
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%; /* MODIFICADO: Ocupa 100% da janela para liberar as extremidades */
   display: flex;
   flex-direction: column;
-  min-height: 90vh;
+  min-height: 100vh;
 }
 
 /* ==========================================================================
-   2. ESTRUTURA DO TOPO E RODAPÉ (HEADER / FOOTER)
+   2. ESTRUTURA DO TOPO E RODAPÉ (HEADER / FOOTER - 100% DE LARGURA)
    ========================================================================== */
 .header {
-  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  background: linear-gradient(135deg, var(--cor-primaria) 0%, #18284d 100%);
   color: #ffffff;
-  padding: 25px;
-  border-radius: 8px;
+  padding: 25px 20px;
+  width: 100%;       /* MODIFICADO: Força 100% de largura horizontal */
+  border-radius: 0px 0px 12px 12px;  /* MODIFICADO: Removido o raio para sangrar perfeitamente de canto a canto */
   margin-bottom: 25px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .header h1 {
-  font-size: 28px;
+  font-size: 48px;
   font-weight: 700;
   letter-spacing: -0.5px;
+  text-align: center;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.459); /* Correção de sintaxe da sombra */
 }
 
 .subtitulo {
-  color: #94a3b8;
-  font-size: 14px;
+  font-size: 19px;
   margin-top: 4px;
+  text-align: center;
+}
+
+footer {
+  background: linear-gradient(135deg, var(--cor-primaria) 0%, #18284d 30%, var(--cor-primaria) 135%);
+  color: #ffffff;
+  padding: 25px 20px;
+  width: 100%;       /* MODIFICADO: Força 100% de largura horizontal */
+  border-radius: 0;  /* MODIFICADO: Removido para preencher totalmente a base */
+  margin-top: auto;  /* MODIFICADO: Garante que o rodapé seja empurrado para o final da página */
+  box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
+  text-align: center;
 }
 
 /* ==========================================================================
-   3. LAYOUT DO PAINEL EM COLUNAS (GRID)
+   3. LAYOUT DO PAINEL RESPONSIVO (75% CENTRALIZADO NO PC / EM COLUNA NO CELULAR)
    ========================================================================== */
 .painel {
+  width: 90%;             /* Padrão para telas menores: deixa uma margem de respiro nas laterais */
+  margin: 0 auto 25px auto; /* Centraliza horizontalmente e dá espaçamento inferior */
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: 1fr; /* MODIFICADO: Inicia em coluna única (responsivo para telas menores) */
   gap: 25px;
   flex: 1;
 }
 
-/* Dispositivos maiores (Computadores) ganham duas colunas lado a lado */
-@media (min-width: 768px) {
+/* Dispositivos maiores (Computadores) ganham duas colunas e passam para 75% */
+@media (min-width: 992px) {
   .painel {
-    grid-template-columns: 400px 1fr;
+    width: 75%; /* MODIFICADO: Ocupa exatamente 75% da largura da tela */
+    grid-template-columns: 400px 1fr; /* Retorna o padrão de duas colunas lado a lado */
   }
 }
 
 /* Cards Laterais */
 .card {
   background-color: #ffffff;
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 24px;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
   height: fit-content;
 }
 
 .card h2 {
-  font-size: 18px;
-  color: #1e293b;
+  font-size: 25px;
+  color: var(--cor-primaria);
+  text-align: center;
   margin-bottom: 20px;
   border-bottom: 2px solid #f1f5f9;
   padding-bottom: 10px;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.336);
 }
 
 /* ==========================================================================
@@ -92,7 +132,7 @@ body {
 }
 
 .form-grupo label {
-  font-size: 13px;
+  font-size: 20px;
   font-weight: 600;
   color: #475569;
 }
@@ -113,7 +153,6 @@ body {
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
-/* Botão Vermelho/Azul de Enviar Formulário */
 .btn-submit {
   width: 100%;
   background-color: #3b82f6;
@@ -162,7 +201,6 @@ body {
   color: #0f172a;
 }
 
-/* Botão sutil de atualizar KM interno do item */
 .btn-atualizar-km {
   background: none;
   border: 1px solid #cbd5e1;
@@ -206,7 +244,6 @@ body {
   color: #b91c1c;
 }
 
-/* Botão de Ação: Revisão Realizada */
 .btn-revisao-feita {
   background-color: #16a34a;
   color: white;

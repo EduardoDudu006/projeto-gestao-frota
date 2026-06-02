@@ -78,11 +78,16 @@ function App() {
     const cadastrarVeiculo = async (e) => {
         e.preventDefault();
         try {
+            const kmInicial = parseInt(quilometragem);
+
+            // CORREÇÃO: Enviando o estado do alerta calculado com base na quilometragem inicial
             await api.post("/veiculos/", {
                 placa: placa,
                 modelo: modelo,
-                quilometragem: parseInt(quilometragem),
+                quilometragem: kmInicial,
+                alerta_revisao: kmInicial >= 10000,
             });
+
             setPlaca("");
             setModelo("");
             setQuilometragem("");
@@ -143,7 +148,7 @@ function App() {
         }
     };
 
-    const executarRegistroRevisao = async (id) => {
+    const ejecutarRegistroRevisao = async (id) => {
         try {
             await api.put(`/veiculos/${id}/registrar-revisao`);
             carregarVeiculos(); // Recarga sincronizada com o SQLite
@@ -392,7 +397,7 @@ function App() {
             )}
 
             <footer
-                className="header"
+                className="footer"
                 style={{
                     marginTop: "40px",
                     padding: "15px",
