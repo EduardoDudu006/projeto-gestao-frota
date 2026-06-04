@@ -61,7 +61,7 @@ O projeto foi arquitetado sob o princípio da separação de responsabilidades (
 * **Como foi atendido:** Utilização do framework **FastAPI** para a construção de uma API RESTful de alta performance. O back-end conta com roteamento limpo, injeção de dependências nativa para gerenciamento de sessões do banco de dados (`Depends(get_db)`) e geração automatizada da documentação interativa OpenAPI/Swagger na rota `/docs`.
 
 ### 2. Persistência de Dados e Mapeamento ORM (SQLAlchemy)
-* **Como foi atendido:** Em vez do uso de queries SQL puras em formato de texto, foi implementado o **SQLAlchemy** como mapeador objeto-relacional (ORM). 
+* **Como foi atendido:** Em vez do uso de queries SQL puras em formato de texto, foi implementado o **SQLAlchemy** como mapeador objeto-relacional (ORM).
     * A classe `VeiculoModel` faz o mapeamento direto das entidades para o banco **SQLite** (`frota.db`).
     * Foram configuradas chaves primárias automáticas (`primary_key=True`), restrições de integridade de negócios (`unique=True` na coluna de placas) e índices de banco de dados (`index=True`) para garantir consultas otimizadas e de alta velocidade.
     * A inicialização física das tabelas ocorre de forma automatizada no ciclo de vida da API via `Base.metadata.create_all(bind=engine)`.
