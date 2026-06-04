@@ -7,7 +7,12 @@
 * **Curso:** Análise e Desenvolvimento de Sistemas
 * **Disciplina:** Desenvolvimento Back-end e Frameworks
 * **Professor:** Breno Holanda
-* **Aluno:** Eduardo Luz **Matrícula:** 01824297
+* **Aluno:**   |   **Matrícula:**
+* Allan Reis - 01809247
+* Athur Jack - 01776700
+* Eduardo Luz - 01824297
+* Hanniel Alonso - 01811811
+* Leandro Gonçalves - 01800086
 * **Período:** 3º
 * **Turno:** Noite
 * **Turma:** 3NA
