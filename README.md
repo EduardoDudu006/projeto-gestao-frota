@@ -19,6 +19,9 @@
 * **Ano/Semestre:** 2026.1
 
 ---
+* **Apresentação Swagger:** https://projeto-gestao-frota.onrender.com/docs
+* **Front-End na Nuvem:** 
+---
 
 ## 📌 Visão Geral do Projeto
 
